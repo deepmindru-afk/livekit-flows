@@ -9,6 +9,7 @@ description = "A library for building declarative agent flows with LiveKit."
 readme = "README.md"
 requires-python = ">=3.12"
 dependencies = [
+    "livekit-agents>=1.2.8",
     "pydantic>=2.11.7",
 ]
 
@@ -33,5 +34,5 @@ examples = [
     "livekit-plugins-cartesia>=1.2.8",
     "livekit-plugins-deepgram>=1.2.8",
     "livekit-plugins-silero>=1.2.8",
-    "python-dotenv>=1.1.1"
+    "python-dotenv>=1.1.1",
 ]

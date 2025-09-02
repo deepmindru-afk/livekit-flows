@@ -1,16 +1,13 @@
 from livekit.agents import (
-    Agent,
     AgentSession,
     JobContext,
-    RunContext,
     WorkerOptions,
     cli,
-    function_tool,
 )
 from livekit.plugins import openai, cartesia, deepgram, silero
 from dotenv import load_dotenv
 
-from livekit_flows.flow import ConversationFlow, FlowNode, Edge
+from livekit_flows import FlowAgent, ConversationFlow, FlowNode, Edge
 
 load_dotenv()
 
@@ -21,7 +18,7 @@ reservation_flow = ConversationFlow(
         FlowNode(
             id="welcome",
             name="Welcome",
-            instruction="Hi! I'll help you make a reservation. What's your name?",
+            static_text="Hi! I'll help you make a reservation. What's your name?",
             edges=[
                 Edge(
                     condition="Got name",
@@ -33,7 +30,7 @@ reservation_flow = ConversationFlow(
         FlowNode(
             id="get_details",
             name="Get Details",
-            instruction="Great! How many people and what date and time?",
+            instruction="Ask about the party size, date, and time.",
             edges=[
                 Edge(
                     condition="Got details",
@@ -60,23 +57,10 @@ reservation_flow = ConversationFlow(
 )
 
 
-@function_tool
-async def lookup_weather(
-    context: RunContext,
-    location: str,
-):
-    """Used to look up weather information."""
-
-    return {"weather": "sunny", "temperature": 30}
-
-
 async def entrypoint(ctx: JobContext):
     await ctx.connect()
 
-    agent = Agent(
-        instructions="You are a friendly voice assistant",
-        tools=[lookup_weather],
-    )
+    agent = FlowAgent(flow=reservation_flow)
     session = AgentSession(
         vad=silero.VAD.load(),
         stt=deepgram.STT(),
@@ -85,7 +69,6 @@ async def entrypoint(ctx: JobContext):
     )
 
     await session.start(agent=agent, room=ctx.room)
-    await session.generate_reply(instructions="Greet the user.")
 
 
 if __name__ == "__main__":

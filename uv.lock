@@ -628,6 +628,7 @@ name = "livekit-flows"
 version = "0.0.1"
 source = { editable = "." }
 dependencies = [
+    { name = "livekit-agents" },
     { name = "pydantic" },
 ]
 
@@ -646,7 +647,10 @@ examples = [
 ]
 
 [package.metadata]
-requires-dist = [{ name = "pydantic", specifier = ">=2.11.7" }]
+requires-dist = [
+    { name = "livekit-agents", specifier = ">=1.2.8" },
+    { name = "pydantic", specifier = ">=2.11.7" },
+]
 
 [package.metadata.requires-dev]
 dev = [
