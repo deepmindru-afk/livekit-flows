@@ -17,8 +17,19 @@ Repository = "https://github.com/mateuszkulpa/livekit-flows"
 [tool.hatch.build.targets.wheel]
 packages = ["livekit_flows"]
 
+[tool.uv]
+default-groups = ["dev", "examples"]
+
 [dependency-groups]
 dev = [
     "ruff>=0.12.11",
     "ty>=0.0.1a19",
+]
+examples = [
+    "livekit-agents>=1.2.8",
+    "livekit-plugins-openai>=1.2.8",
+    "livekit-plugins-cartesia>=1.2.8",
+    "livekit-plugins-deepgram>=1.2.8",
+    "livekit-plugins-silero>=1.2.8",
+    "python-dotenv>=1.1.1"
 ]
