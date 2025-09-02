@@ -627,6 +627,9 @@ wheels = [
 name = "livekit-flows"
 version = "0.0.1"
 source = { editable = "." }
+dependencies = [
+    { name = "pydantic" },
+]
 
 [package.dev-dependencies]
 dev = [
@@ -643,6 +646,7 @@ examples = [
 ]
 
 [package.metadata]
+requires-dist = [{ name = "pydantic", specifier = ">=2.11.7" }]
 
 [package.metadata.requires-dev]
 dev = [
