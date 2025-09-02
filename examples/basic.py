@@ -12,7 +12,7 @@ from livekit_flows import FlowAgent, ConversationFlow, FlowNode, Edge
 load_dotenv()
 
 reservation_flow = ConversationFlow(
-    system_prompt="You take restaurant reservations. Be friendly and get: name, party size, date, time.",
+    system_prompt="You are a conversational voice agent that takes restaurant reservations. Be friendly and get: name, party size, date, time.",
     initial_node="welcome",
     nodes=[
         FlowNode(
