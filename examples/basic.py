@@ -52,7 +52,12 @@ reservation_flow = ConversationFlow(
                 ),
             ],
         ),
-        FlowNode(id="done", name="Done", static_text="All set! See you then!"),
+        FlowNode(
+            id="done",
+            name="Done",
+            static_text="All set! See you then!",
+            is_final=True,
+        ),
     ],
 )
 

@@ -1,4 +1,12 @@
-from livekit.agents import Agent, RunContext, ChatContext, function_tool
+from livekit.agents import (
+    Agent,
+    RunContext,
+    ChatContext,
+    function_tool,
+    get_job_context,
+)
+from livekit import api
+from livekit.agents.voice import SpeechHandle
 from livekit_flows.flow import ConversationFlow, FlowNode
 
 
@@ -51,10 +59,29 @@ class FlowAgent(Agent):
 
         return placeholder_func
 
+    async def _end_session(self, speech_handle: SpeechHandle | None):
+        if speech_handle:
+            await speech_handle
+
+        ctx = get_job_context()
+        if ctx is None:
+            return
+
+        await ctx.api.room.delete_room(
+            api.DeleteRoomRequest(
+                room=ctx.room.name,
+            )
+        )
+
     async def on_enter(self):
+        speech_handle: SpeechHandle | None = None
+
         if self._current_node.instruction:
-            await self.session.generate_reply(
+            speech_handle = self.session.generate_reply(
                 instructions=self._current_node.instruction
             )
         elif self._current_node.static_text:
-            await self.session.say(self._current_node.static_text)
+            speech_handle = self.session.say(self._current_node.static_text)
+
+        if self._current_node.is_final:
+            await self._end_session(speech_handle)

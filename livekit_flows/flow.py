@@ -12,6 +12,7 @@ class FlowNode(BaseModel):
     name: str
     instruction: str | None = None
     static_text: str | None = None
+    is_final: bool = False
     edges: list[Edge] = Field(default_factory=list)
 
 
