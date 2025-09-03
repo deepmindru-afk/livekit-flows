@@ -7,7 +7,7 @@ from livekit.agents import (
 )
 from livekit import api
 from livekit.agents.voice import SpeechHandle
-from livekit_flows.flow import ConversationFlow, FlowNode
+from livekit_flows.flow import ConversationFlow, FlowNode, FieldType
 
 
 class FlowAgent(Agent):
@@ -28,24 +28,89 @@ class FlowAgent(Agent):
             raise ValueError(f"Initial node {initial_node_id} not found in flow")
 
         self._current_node = initial_node if current_node is None else current_node
+        self._userdata_class = flow.generate_userdata_class()
 
         tools = []
         for edge in self._current_node.edges:
-            tools.append(
-                function_tool(
-                    self._build_function_for_edge(
-                        edge_id=edge.id, target_node_id=edge.target_node_id
-                    ),
-                    name=edge.id,
-                    description=edge.condition,
+            if edge.collect_data:
+                tools.append(self._build_data_collection_tool(edge))
+            else:
+                tools.append(
+                    function_tool(
+                        self._build_function_for_edge(
+                            edge_id=edge.id, target_node_id=edge.target_node_id
+                        ),
+                        name=edge.id,
+                        description=edge.condition,
+                    )
                 )
-            )
 
         super().__init__(
             instructions=flow.system_prompt,
             tools=tools,
             chat_ctx=chat_ctx,
         )
+
+    def _build_data_collection_tool(self, edge):
+        collect_params = edge.collect_data
+
+        param_type_map = {
+            FieldType.STRING: "string",
+            FieldType.INTEGER: "integer",
+            FieldType.FLOAT: "number",
+            FieldType.BOOLEAN: "boolean",
+        }
+
+        properties = {}
+        required_fields = []
+
+        for param in collect_params:
+            properties[param.name] = {
+                "type": param_type_map[param.type],
+                "description": param.description,
+            }
+            required_fields.append(param.name)
+
+        raw_schema = {
+            "type": "function",
+            "name": edge.id,
+            "description": edge.condition,
+            "parameters": {
+                "type": "object",
+                "properties": properties,
+                "required": required_fields,
+                "additionalProperties": False,
+            },
+        }
+
+        async def data_collection_func(
+            raw_arguments: dict[str, object], context: RunContext
+        ):
+            if not self.session._userdata:
+                self.session.userdata = self._userdata_class.model_construct()
+
+            for param in collect_params:
+                value = raw_arguments[param.name]
+                setattr(self.session.userdata, param.name, value)
+
+            if edge.target_node_id:
+                target_node = next(
+                    (
+                        node
+                        for node in self._flow.nodes
+                        if node.id == edge.target_node_id
+                    ),
+                    None,
+                )
+                if not target_node:
+                    raise ValueError(
+                        f"Target node {edge.target_node_id} not found in flow"
+                    )
+
+                new_agent = FlowAgent(self._flow, target_node, self.chat_ctx)
+                self.session.update_agent(new_agent)
+
+        return function_tool(data_collection_func, raw_schema=raw_schema)
 
     def _build_function_for_edge(self, edge_id: str, target_node_id: str):
         async def placeholder_func(context: RunContext):
@@ -55,7 +120,8 @@ class FlowAgent(Agent):
             if not target_node:
                 raise ValueError(f"Target node {target_node_id} not found in flow")
 
-            self.session.update_agent(FlowAgent(self._flow, target_node, self.chat_ctx))
+            new_agent = FlowAgent(self._flow, target_node, self.chat_ctx)
+            self.session.update_agent(new_agent)
 
         return placeholder_func
 
