@@ -1,6 +1,7 @@
 .PHONY: 
 	lint 
 	build
+	test
 
 lint:
 	uv run ruff check --fix
@@ -9,3 +10,6 @@ lint:
 
 build:
 	uv build
+
+test:
+	uv run pytest
