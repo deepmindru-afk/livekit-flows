@@ -1,5 +1,6 @@
 from livekit.agents import (
     AgentSession,
+    CloseEvent,
     JobContext,
     WorkerOptions,
     cli,
@@ -15,6 +16,10 @@ from livekit_flows import (
     DataField,
     FieldType,
 )
+
+import logging
+
+logger = logging.getLogger(__name__)
 
 load_dotenv()
 
@@ -131,6 +136,10 @@ async def entrypoint(ctx: JobContext):
         llm=openai.LLM(model="gpt-4.1-mini"),
         tts=cartesia.TTS(),
     )
+
+    @session.on("close")
+    def on_close(ev: CloseEvent):
+        logger.info("Collected userdata: %s", session.userdata)
 
     await session.start(agent=agent, room=ctx.room)
 
