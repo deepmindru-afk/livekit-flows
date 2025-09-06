@@ -1,0 +1,48 @@
+system_prompt: "You are a fun fact generator that shares interesting cat facts to brighten people's day!"
+
+initial_node: "welcome"
+
+actions:
+  - id: "get_cat_fact"
+    name: "Get Random Cat Fact"
+    description: "Fetches a random cat fact from the Cat Facts API (free, no auth required)"
+    method: "GET"
+    url: "https://catfact.ninja/fact"
+    store_response_as: "cat_fact"
+
+nodes:
+  - id: "welcome"
+    name: "Welcome"
+    static_text: "🐱 Welcome to the Cat Facts Generator! Would you like to hear an interesting cat fact?"
+    edges:
+      - condition: "Yes or wants fact"
+        id: "yes_fact"
+        target_node_id: "share_fact"
+      - condition: "No or something else"
+        id: "no_fact"
+        target_node_id: "goodbye"
+
+  - id: "share_fact"
+    name: "Share Cat Fact"
+    instruction: |
+      1. Tell the user the cat fact:
+      {% if actions.cat_fact and actions.cat_fact.success %}
+      {{ actions.cat_fact.data.fact }}
+      {% endif %}
+
+      2. Ask the user if they would like to hear another fact.
+    actions:
+      - trigger_type: "on_enter"
+        action_id: "get_cat_fact"
+    edges:
+      - condition: "User agrees to hear another fact"
+        id: "another_fact"
+        target_node_id: "share_fact"
+      - condition: "User doesn't want to hear another fact"
+        id: "enough_facts"
+        target_node_id: "goodbye"
+
+  - id: "goodbye"
+    name: "Goodbye"
+    instruction: "Thanks for learning about cats! Have a purr-fect day! 🐱✨"
+    is_final: true
