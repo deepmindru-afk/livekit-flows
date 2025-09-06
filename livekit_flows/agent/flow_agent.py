@@ -189,7 +189,6 @@ class FlowAgent(Agent):
             rendered_instruction = self._render_instruction(
                 self._current_node.instruction
             )
-            logger.info(f"Rendering instruction: {rendered_instruction}")
             speech_handle = self.session.generate_reply(
                 instructions=rendered_instruction
             )
