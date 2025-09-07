@@ -56,6 +56,10 @@ function handleExportYaml() {
   flowsStore.exportActiveFlow('yaml')
 }
 
+function handleAddNode() {
+  flowsStore.addNode({ x: 300, y: 200 })
+}
+
 // Initialize with a flow if none exists
 if (flowsStore.flows.value.length === 0) {
   flowsStore.createFlow()
@@ -128,11 +132,23 @@ if (flowsStore.flows.value.length === 0) {
               ],
             ]"
           >
-            <UButton size="sm">
+            <UButton
+              size="sm"
+              variant="soft"
+            >
               <UIcon name="i-heroicons-arrow-down-tray" />
               Export
             </UButton>
           </UDropdownMenu>
+
+          <UButton
+            size="sm"
+            title="Add a new node to the flow"
+            @click="handleAddNode"
+          >
+            <UIcon name="i-heroicons-plus-circle" />
+            Add Node
+          </UButton>
         </template>
       </UDashboardNavbar>
       <slot />

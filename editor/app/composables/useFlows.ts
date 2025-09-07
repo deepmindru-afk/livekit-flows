@@ -1,7 +1,7 @@
 import { computed } from 'vue'
 import { useStorage } from '@vueuse/core'
 import YAML from 'yaml'
-import type { ConversationFlow, NodePositionMap } from '@/types/flow'
+import type { ConversationFlow, FlowNode, NodePositionMap } from '@/types/flow'
 
 type FlowRecord = ConversationFlow & { id: string, name: string }
 
@@ -73,7 +73,51 @@ export function useFlows() {
   function updatePosition(nodeId: string, pos: { x: number, y: number }) {
     if (!activeFlowId.value) return
     const currentMap = positionsByFlowId.value[activeFlowId.value] || {}
-    const newMap = { ...currentMap, [nodeId]: pos }
+    positionsByFlowId.value[activeFlowId.value] = { ...currentMap, [nodeId]: pos }
+  }
+
+  function addNode(position?: { x: number, y: number }) {
+    if (!activeFlowId.value) return
+    const flow = activeFlow.value
+    if (!flow) return
+
+    const nodeId = `node-${Date.now()}`
+    const defaultPosition = position || { x: 200, y: 200 }
+
+    const newNode: FlowNode = {
+      id: nodeId,
+      name: 'New Node',
+      instruction: '',
+      static_text: '',
+      is_final: false,
+      edges: [],
+      actions: [],
+    }
+
+    flow.nodes.push(newNode)
+    const currentMap = positionsByFlowId.value[activeFlowId.value] || {}
+    positionsByFlowId.value[activeFlowId.value] = { ...currentMap, [nodeId]: defaultPosition }
+  }
+
+  function deleteNode(nodeId: string) {
+    if (!activeFlowId.value) return
+    const flow = activeFlow.value
+    if (!flow) return
+
+    if (flow.nodes.length <= 1) return
+    if (nodeId === flow.initial_node) return
+
+    const nodeIndex = flow.nodes.findIndex(node => node.id === nodeId)
+    if (nodeIndex !== -1) {
+      flow.nodes.splice(nodeIndex, 1)
+    }
+
+    flow.nodes.forEach((node) => {
+      node.edges = node.edges?.filter(edge => edge.target_node_id !== nodeId) || []
+    })
+
+    const currentMap = positionsByFlowId.value[activeFlowId.value] || {}
+    const { [nodeId]: deleted, ...newMap } = currentMap
     positionsByFlowId.value[activeFlowId.value] = newMap
   }
 
@@ -116,5 +160,5 @@ export function useFlows() {
     URL.revokeObjectURL(a.href)
   }
 
-  return { flows, activeFlowId, activeFlow, activePositions, createFlow, selectFlow, renameFlow, duplicateFlow, deleteFlow, updateActiveFlow, setPositions, updatePosition, importFlowFromFile, exportActiveFlow }
+  return { flows, activeFlowId, activeFlow, activePositions, createFlow, selectFlow, renameFlow, duplicateFlow, deleteFlow, updateActiveFlow, setPositions, updatePosition, addNode, deleteNode, importFlowFromFile, exportActiveFlow }
 }
