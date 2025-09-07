@@ -39,7 +39,7 @@ export function canvasToSchema(
     const edgeData = e.data as SchemaEdge
     const ed: SchemaEdge = {
       id: edgeData?.id || e.id,
-      condition: edgeData?.condition || 'true',
+      condition: edgeData?.condition || '',
       target_node_id: e.target,
       collect_data: edgeData?.collect_data || [],
       actions: edgeData?.actions || [],

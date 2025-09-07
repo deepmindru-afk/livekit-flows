@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import type { NavigationMenuItem } from '@nuxt/ui'
 import { useFlows } from '@/composables/useFlows'
+import FlowInspector from '@/components/FlowInspector.vue'
 
 const open = ref(false)
 const flowsStore = useFlows()
@@ -26,7 +27,6 @@ const groups = computed(() => [{
   items: links.value.flat(),
 }])
 
-// Import/Export functions
 const importFileRef = ref<HTMLInputElement>()
 function handleImport() {
   importFileRef.value?.click()
@@ -38,7 +38,6 @@ async function handleFileChange(event: Event) {
   if (file) {
     try {
       await flowsStore.importFlowFromFile(file)
-      // Reset file input
       target.value = ''
     }
     catch (error) {
@@ -60,7 +59,6 @@ function handleAddNode() {
   flowsStore.addNode({ x: 300, y: 200 })
 }
 
-// Initialize with a flow if none exists
 if (flowsStore.flows.value.length === 0) {
   flowsStore.createFlow()
 }
@@ -71,7 +69,6 @@ if (flowsStore.flows.value.length === 0) {
     <UDashboardSidebar
       id="default"
       v-model:open="open"
-      :default-size="20"
       class="bg-elevated/25"
       :ui="{ footer: 'lg:border-t lg:border-default' }"
     >
@@ -103,7 +100,7 @@ if (flowsStore.flows.value.length === 0) {
 
     <UDashboardPanel
       id="flow-editor"
-      :default-size="50"
+      class="flex-grow-3"
     >
       <UDashboardNavbar title="Livekit Flows Editor">
         <template #right>
@@ -151,16 +148,15 @@ if (flowsStore.flows.value.length === 0) {
           </UButton>
         </template>
       </UDashboardNavbar>
+
       <slot />
     </UDashboardPanel>
 
     <UDashboardPanel
       id="property-editor"
-      :default-size="30"
+      class="flex-grow-2"
     >
-      <template #body>
-        Property Editor
-      </template>
+      <FlowInspector />
     </UDashboardPanel>
   </UDashboardGroup>
 </template>

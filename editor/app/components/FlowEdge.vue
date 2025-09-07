@@ -40,7 +40,7 @@ function deleteEdge() {
         :style="{ position: 'absolute', transform: `translate(-50%, -50%) translate(${path[1]}px, ${path[2]}px)`, pointerEvents: 'all' }"
         class="nodrag nopan bg-white border rounded px-2 py-1 text-xs cursor-pointer hover:bg-gray-50"
       >
-        {{ props.data?.condition || 'true' }}
+        {{ props.data?.condition || '...' }}
       </div>
     </UContextMenu>
   </EdgeLabelRenderer>

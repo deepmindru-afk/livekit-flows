@@ -13,6 +13,10 @@ import '@vue-flow/core/dist/theme-default.css'
 import '@vue-flow/controls/dist/style.css'
 import '@vue-flow/minimap/dist/style.css'
 
+import { useSelection } from '@/composables/useSelection'
+
+const selection = useSelection()
+
 type SelectableNode = Node & { selected?: boolean }
 
 const flows = useFlows()
@@ -44,7 +48,7 @@ function onConnect(params: Connection) {
     src.edges = src.edges || []
     src.edges.push({
       id,
-      condition: 'true',
+      condition: '',
       target_node_id: params.target || undefined,
       collect_data: [],
       actions: [],
@@ -64,6 +68,22 @@ function onNodeClick(event: { node: Node }) {
   nodes.value.forEach((node: SelectableNode) => {
     node.selected = node.id === event.node.id
   })
+  selection.selectNode(event.node.id)
+}
+
+function onEdgeClick(event: { edge: Edge }) {
+  nodes.value.forEach((node: SelectableNode) => {
+    node.selected = false
+  })
+  selection.selectEdge(event.edge.id)
+}
+
+function onPaneClick() {
+  // Clear all selections when clicking on empty canvas
+  nodes.value.forEach((node: SelectableNode) => {
+    node.selected = false
+  })
+  selection.clearSelection()
 }
 
 function addNewNode() {
@@ -113,6 +133,8 @@ function onKeyDown(event: KeyboardEvent) {
       :elements-selectable="true"
       @connect="onConnect"
       @node-click="onNodeClick"
+      @edge-click="onEdgeClick"
+      @pane-click="onPaneClick"
       @node-drag-stop="onNodeDragStop"
       @keydown="onKeyDown"
     >
