@@ -132,33 +132,21 @@ export function useFlows() {
     activeFlowId.value = id
   }
 
-  function exportActiveFlow(format: 'json' | 'yaml') {
-    const f = activeFlow.value
-    if (!f) return
-
-    const payload: ConversationFlow = {
-      system_prompt: f.system_prompt,
-      initial_node: f.initial_node,
-      nodes: f.nodes,
-      actions: f.actions || [],
-      environment_variables: f.environment_variables || {},
-    }
-
-    const content = format === 'yaml' ? YAML.stringify(payload) : JSON.stringify(payload, null, 2)
-    const mimeType = format === 'yaml' ? 'application/x-yaml' : 'application/json'
-    const blob = new Blob([content], { type: mimeType })
-
-    const a = document.createElement('a')
-    a.href = URL.createObjectURL(blob)
-    a.download = `${f.name || 'flow'}.${format}`
-    a.style.display = 'none'
-
-    document.body.appendChild(a)
-    a.click()
-    document.body.removeChild(a)
-
-    URL.revokeObjectURL(a.href)
+  return {
+    flows,
+    activeFlowId,
+    activeFlow,
+    activePositions,
+    createFlow,
+    selectFlow,
+    renameFlow,
+    duplicateFlow,
+    deleteFlow,
+    updateActiveFlow,
+    setPositions,
+    updatePosition,
+    addNode,
+    deleteNode,
+    importFlowFromFile,
   }
-
-  return { flows, activeFlowId, activeFlow, activePositions, createFlow, selectFlow, renameFlow, duplicateFlow, deleteFlow, updateActiveFlow, setPositions, updatePosition, addNode, deleteNode, importFlowFromFile, exportActiveFlow }
 }
