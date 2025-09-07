@@ -25,17 +25,6 @@ const availableActions = computed(() => {
   })) || []
 })
 
-const nodeId = computed({
-  get: () => selectedNode.value?.id || '',
-  set: (value: string) => {
-    if (!selectedNode.value) return
-    flowsStore.updateActiveFlow((flow) => {
-      const node = flow.nodes.find(n => n.id === selectedNode.value!.id)
-      if (node) node.id = value
-    })
-  },
-})
-
 const nodeName = computed({
   get: () => selectedNode.value?.name || '',
   set: (value: string) => {
@@ -129,19 +118,6 @@ function removeNodeAction(index: number) {
 
       <div class="space-y-6">
         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <UFormField
-            label="Node ID"
-            description="Unique identifier for this node"
-            required
-          >
-            <UInput
-              v-model="nodeId"
-              placeholder="e.g., greeting, product_selection"
-              size="lg"
-              class="font-mono text-sm"
-            />
-          </UFormField>
-
           <UFormField
             label="Node Name"
             description="A descriptive name for this conversation node"

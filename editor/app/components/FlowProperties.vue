@@ -92,7 +92,34 @@ const getHeadersList = (actionIndex: number) => {
 }
 
 function addEnvVar() {
-  envVarList.value.push({ key: '', value: '' })
+  const currentKeys = envVarList.value.map(item => item.key)
+  let counter = 1
+  const newKey = 'VAR'
+  while (currentKeys.includes(`${newKey}${counter > 1 ? counter : ''}`)) {
+    counter++
+  }
+  const finalKey = counter > 1 ? `${newKey}${counter}` : newKey
+  envVarList.value = [...envVarList.value, { key: finalKey, value: '' }]
+}
+
+function removeEnvVar(index: number) {
+  envVarList.value = envVarList.value.filter((_, i) => i !== index)
+}
+
+function removeHeader(actionIndex: number, headerIndex: number) {
+  getHeadersList(actionIndex).value = getHeadersList(actionIndex).value.filter((_, i) => i !== headerIndex)
+}
+
+function addHeader(actionIndex: number) {
+  const currentHeaders = getHeadersList(actionIndex).value
+  const currentKeys = currentHeaders.map(item => item.key)
+  let counter = 1
+  const newKey = 'Header'
+  while (currentKeys.includes(`${newKey}${counter > 1 ? counter : ''}`)) {
+    counter++
+  }
+  const finalKey = counter > 1 ? `${newKey}${counter}` : newKey
+  getHeadersList(actionIndex).value = [...currentHeaders, { key: finalKey, value: '' }]
 }
 
 const globalActions = computed({
@@ -124,8 +151,8 @@ function removeGlobalAction(index: number) {
 }
 
 const bodyTemplatePlaceholder = '{"name": "{{USER_NAME}}", "email": "{{USER_EMAIL}}"}'
-const usageHint = 'Reference these variables in actions using {{ "{{VAR_NAME}}" }} syntax'
-const urlHint = 'Use {{ "{{VARIABLE_NAME}}" }} to reference environment variables'
+const usageHint = 'Reference these variables in actions using {{VAR_NAME}} syntax'
+const urlHint = 'Use {{VARIABLE_NAME}} to reference environment variables'
 
 function updateGlobalAction(index: number, field: keyof CustomAction, value: unknown) {
   const newActions = [...globalActions.value]
@@ -139,7 +166,6 @@ function updateGlobalAction(index: number, field: keyof CustomAction, value: unk
 
 <template>
   <div class="space-y-8">
-    <!-- Basic Info -->
     <UCard class="border-0 shadow-sm bg-white">
       <template #header>
         <div class="flex items-center gap-3">
@@ -166,7 +192,7 @@ function updateGlobalAction(index: number, field: keyof CustomAction, value: unk
         >
           <UInput
             v-model="flowName"
-            placeholder="e.g., Customer Support Flow, Product Inquiry Flow"
+            placeholder="Customer Support Flow, Product Inquiry Flow"
             size="lg"
             class="font-medium"
           />
@@ -207,7 +233,6 @@ function updateGlobalAction(index: number, field: keyof CustomAction, value: unk
       </div>
     </UCard>
 
-    <!-- Environment Variables -->
     <UCard class="border-0 shadow-sm bg-white">
       <template #header>
         <div class="flex items-center justify-between">
@@ -273,15 +298,15 @@ function updateGlobalAction(index: number, field: keyof CustomAction, value: unk
           <div class="flex items-start gap-4">
             <div class="flex-1 min-w-0">
               <div class="flex items-center gap-3">
-                <div class="flex-shrink-0 w-32">
+                <div class="flex-1">
                   <UInput
                     v-model="item.key"
                     placeholder="KEY_NAME"
                     size="sm"
-                    class="font-mono text-sm font-medium"
+                    class="w-full font-mono text-sm font-medium"
                   />
                 </div>
-                <div class="text-gray-400 text-sm font-mono">
+                <div class="text-gray-400 text-sm font-mono px-2">
                   =
                 </div>
                 <div class="flex-1">
@@ -299,7 +324,7 @@ function updateGlobalAction(index: number, field: keyof CustomAction, value: unk
               variant="ghost"
               color="error"
               class="opacity-0 group-hover:opacity-100 transition-opacity"
-              @click="envVarList.splice(index, 1)"
+              @click="removeEnvVar(index)"
             >
               <UIcon name="i-heroicons-trash" />
               <span class="sr-only">Remove variable</span>
@@ -309,13 +334,10 @@ function updateGlobalAction(index: number, field: keyof CustomAction, value: unk
 
         <div class="text-xs text-gray-500 bg-blue-50 p-3 rounded-lg">
           💡 <strong>Usage:</strong> {{ usageHint }}
-          <br>
-          📝 <strong>Format:</strong> <code class="bg-white px-1 py-0.5 rounded text-xs">KEY = value</code>
         </div>
       </div>
     </UCard>
 
-    <!-- Global Actions -->
     <UCard class="border-0 shadow-sm bg-white">
       <template #header>
         <div class="flex items-center justify-between">
@@ -411,51 +433,49 @@ function updateGlobalAction(index: number, field: keyof CustomAction, value: unk
           </template>
 
           <div class="space-y-6">
-            <!-- Basic Configuration -->
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-              <UFormField
-                label="Action ID"
-                description="Unique identifier for this action"
-                required
-              >
-                <UInput
-                  v-model="action.id"
-                  placeholder="e.g., send_email, create_user"
-                  size="sm"
-                  class="font-mono text-sm"
-                  @input="updateGlobalAction(index, 'id', $event)"
-                />
-              </UFormField>
+            <UFormField
+              label="Action ID"
+              description="Unique identifier for this action"
+              required
+            >
+              <UInput
+                v-model="action.id"
+                placeholder="send_email, create_user"
+                size="sm"
+                class="font-mono text-sm w-full"
+                @input="updateGlobalAction(index, 'id', $event)"
+              />
+            </UFormField>
 
-              <UFormField
-                label="Action Name"
-                description="A descriptive name for this action"
-                required
-              >
-                <UInput
-                  v-model="action.name"
-                  placeholder="e.g., Send Email, Create User, Fetch Data"
-                  size="sm"
-                  @input="updateGlobalAction(index, 'name', $event)"
-                />
-              </UFormField>
+            <UFormField
+              label="Action Name"
+              description="A descriptive name for this action"
+              required
+            >
+              <UInput
+                v-model="action.name"
+                placeholder="Send Email, Create User, Fetch Data"
+                size="sm"
+                class="w-full"
+                @input="updateGlobalAction(index, 'name', $event)"
+              />
+            </UFormField>
 
-              <UFormField
-                label="HTTP Method"
-                description="The HTTP method to use for the request"
-                required
-              >
-                <USelect
-                  v-model="action.method"
-                  :items="httpMethodOptions"
-                  placeholder="Select HTTP method"
-                  size="sm"
-                  @update:model-value="updateGlobalAction(index, 'method', $event)"
-                />
-              </UFormField>
-            </div>
+            <UFormField
+              label="HTTP Method"
+              description="The HTTP method to use for the request"
+              required
+            >
+              <USelect
+                v-model="action.method"
+                :items="httpMethodOptions"
+                placeholder="Select HTTP method"
+                size="sm"
+                class="w-full"
+                @update:model-value="updateGlobalAction(index, 'method', $event)"
+              />
+            </UFormField>
 
-            <!-- Request Configuration -->
             <div>
               <h6 class="text-sm font-medium text-gray-900 mb-4 flex items-center gap-2">
                 <UIcon
@@ -475,6 +495,7 @@ function updateGlobalAction(index: number, field: keyof CustomAction, value: unk
                     v-model="action.url"
                     placeholder="https://api.example.com/v1/users"
                     size="sm"
+                    class="w-full"
                     @input="updateGlobalAction(index, 'url', $event)"
                   />
                   <div class="text-xs text-gray-500 mt-2">
@@ -511,7 +532,6 @@ function updateGlobalAction(index: number, field: keyof CustomAction, value: unk
               </div>
             </div>
 
-            <!-- Request Body (conditional) -->
             <div v-if="action.method === 'POST' || action.method === 'PUT' || action.method === 'PATCH'">
               <h6 class="text-sm font-medium text-gray-900 mb-4 flex items-center gap-2">
                 <UIcon
@@ -539,7 +559,6 @@ function updateGlobalAction(index: number, field: keyof CustomAction, value: unk
               </UFormField>
             </div>
 
-            <!-- Description -->
             <UFormField
               label="Description"
               description="Optional description to document what this action does"
@@ -554,8 +573,6 @@ function updateGlobalAction(index: number, field: keyof CustomAction, value: unk
               />
             </UFormField>
           </div>
-
-          <!-- Headers -->
           <div class="mt-6">
             <div class="flex items-center justify-between mb-4">
               <h6 class="text-sm font-medium text-gray-900 flex items-center gap-2">
@@ -569,7 +586,7 @@ function updateGlobalAction(index: number, field: keyof CustomAction, value: unk
                 size="xs"
                 variant="outline"
                 color="primary"
-                @click="getHeadersList(index).value.push({ key: '', value: '' })"
+                @click="addHeader(index)"
               >
                 <UIcon name="i-heroicons-plus" />
                 Add Header
@@ -604,15 +621,15 @@ function updateGlobalAction(index: number, field: keyof CustomAction, value: unk
                 <div class="flex items-center gap-3">
                   <div class="flex-1 min-w-0">
                     <div class="flex items-center gap-3">
-                      <div class="flex-shrink-0 w-36">
+                      <div class="flex-1">
                         <UInput
                           v-model="header.key"
                           placeholder="Header-Name"
                           size="xs"
-                          class="font-mono text-xs font-medium"
+                          class="w-full font-mono text-xs font-medium"
                         />
                       </div>
-                      <div class="text-gray-400 text-xs font-mono">
+                      <div class="text-gray-400 text-xs font-mono px-2">
                         :
                       </div>
                       <div class="flex-1">
@@ -630,7 +647,7 @@ function updateGlobalAction(index: number, field: keyof CustomAction, value: unk
                     variant="ghost"
                     color="error"
                     class="opacity-0 group-hover:opacity-100 transition-opacity"
-                    @click="getHeadersList(index).value.splice(headerIndex, 1)"
+                    @click="removeHeader(index, headerIndex)"
                   >
                     <UIcon name="i-heroicons-trash" />
                     <span class="sr-only">Remove header</span>
