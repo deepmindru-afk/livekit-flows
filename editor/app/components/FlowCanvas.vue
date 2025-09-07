@@ -8,6 +8,10 @@ import FlowNode from './FlowNode.vue'
 import FlowEdge from './FlowEdge.vue'
 import { useFlows } from '@/composables/useFlows'
 import { schemaToCanvas } from '@/composables/useFlowConverters'
+import '@vue-flow/core/dist/style.css'
+import '@vue-flow/core/dist/theme-default.css'
+import '@vue-flow/controls/dist/style.css'
+import '@vue-flow/minimap/dist/style.css'
 
 const flows = useFlows()
 const nodes = ref<Node[]>([])
@@ -74,8 +78,3 @@ function onNodeDragStop(event: { node: Node }) {
     </template>
   </VueFlow>
 </template>
-
-<style>
-@import '@vue-flow/core/dist/style.css';
-@import '@vue-flow/core/dist/theme-default.css';
-</style>
