@@ -1,6 +1,6 @@
 <template>
   <ClientOnly>
-    <div class="h-screen w-screen">
+    <div class="h-full w-full">
       <FlowEditor />
     </div>
   </ClientOnly>

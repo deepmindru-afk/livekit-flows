@@ -2,8 +2,10 @@
 import { ref } from 'vue'
 import type { Node, Edge } from '@vue-flow/core'
 import { VueFlow } from '@vue-flow/core'
+import { Background } from '@vue-flow/background'
+import { Controls } from '@vue-flow/controls'
+import { MiniMap } from '@vue-flow/minimap'
 
-// these are our nodes
 const nodes = ref<Node[]>([
   // an input node, specified by using `type: 'input'`
   {
@@ -83,12 +85,18 @@ const edges = ref<Edge[]>([
     :nodes="nodes"
     :edges="edges"
   >
-    <!-- bind your custom node type to a component by using slots, slot names are always `node-<type>` -->
+    <Background
+      pattern-color="#aaa"
+      :gap="40"
+      :size="2"
+    />
+    <Controls />
+    <MiniMap />
+
     <template #node-special="specialNodeProps">
       <SpecialNode v-bind="specialNodeProps" />
     </template>
 
-    <!-- bind your custom edge type to a component by using slots, slot names are always `edge-<type>` -->
     <template #edge-special="specialEdgeProps">
       <SpecialEdge v-bind="specialEdgeProps" />
     </template>
@@ -98,4 +106,6 @@ const edges = ref<Edge[]>([
 <style>
 @import "@vue-flow/core/dist/style.css";
 @import "@vue-flow/core/dist/theme-default.css";
+@import "@vue-flow/controls/dist/style.css";
+@import "@vue-flow/minimap/dist/style.css";
 </style>
