@@ -89,6 +89,10 @@ function handleAddNode() {
   flowsStore.addNode({ x: 300, y: 200 })
 }
 
+function handleDeleteFlow(flowId: string) {
+  flowsStore.deleteFlow(flowId)
+}
+
 if (flowsStore.flows.value.length === 0) {
   flowsStore.createFlow()
 }
@@ -109,13 +113,34 @@ if (flowsStore.flows.value.length === 0) {
             class="bg-transparent ring-default"
           />
 
-          <UNavigationMenu
-            :collapsed="collapsed"
-            :items="links[0]"
-            orientation="vertical"
-            tooltip
-            popover
-          />
+          <div class="space-y-1">
+            <template
+              v-for="flow in flowsStore.flows.value"
+              :key="flow.id"
+            >
+              <UContextMenu
+                :items="[
+                  [
+                    { label: 'Delete', icon: 'i-heroicons-trash', onSelect: () => handleDeleteFlow(flow.id) },
+                  ],
+                ]"
+              >
+                <button
+                  class="w-full flex items-center gap-3 px-3 py-2 text-left text-sm rounded-md transition-colors hover:bg-gray-100 dark:hover:bg-gray-800"
+                  :class="{
+                    'bg-blue-50 text-blue-700 dark:bg-blue-900/50 dark:text-blue-300': flowsStore.activeFlowId.value === flow.id,
+                  }"
+                  @click="flowsStore.selectFlow(flow.id)"
+                >
+                  <UIcon
+                    name="i-lucide-file-text"
+                    class="h-4 w-4 flex-shrink-0"
+                  />
+                  <span class="truncate flex-1">{{ flow.name }}</span>
+                </button>
+              </UContextMenu>
+            </template>
+          </div>
 
           <UNavigationMenu
             :collapsed="collapsed"
