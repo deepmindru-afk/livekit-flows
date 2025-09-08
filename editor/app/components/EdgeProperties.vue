@@ -30,13 +30,6 @@ const selectedEdge = computed(() => {
   return null
 })
 
-const availableNodes = computed(() => {
-  return flowsStore.activeFlow.value?.nodes.map(node => ({
-    label: `${node.name} (${node.id})`,
-    value: node.id,
-  })) || []
-})
-
 const availableActions = computed(() => {
   return flowsStore.activeFlow.value?.actions?.map(action => ({
     label: `${action.name} (${action.id})`,
@@ -53,20 +46,6 @@ const edgeCondition = computed({
       if (sourceNode) {
         const edge = sourceNode.edges?.find(e => e.id === selectedEdge.value!.edge.id)
         if (edge) edge.condition = value
-      }
-    })
-  },
-})
-
-const edgeTargetNodeId = computed({
-  get: () => selectedEdge.value?.edge.target_node_id || '',
-  set: (value: string) => {
-    if (!selectedEdge.value) return
-    flowsStore.updateActiveFlow((flow) => {
-      const sourceNode = flow.nodes.find(n => n.id === selectedEdge.value!.sourceNode.id)
-      if (sourceNode) {
-        const edge = sourceNode.edges?.find(e => e.id === selectedEdge.value!.edge.id)
-        if (edge) edge.target_node_id = value || undefined
       }
     })
   },
@@ -90,7 +69,7 @@ function addEdgeDataField() {
   if (!selectedEdge.value) return
   const newField = {
     name: '',
-    type: 'string',
+    type: 'string' as const,
     description: '',
     required: false,
   }
@@ -120,7 +99,7 @@ const edgeActions = computed({
 function addEdgeAction() {
   if (!selectedEdge.value) return
   const newAction = {
-    trigger_type: 'on_edge',
+    trigger_type: 'on_edge' as const,
     action_id: '',
   }
   edgeActions.value = [...edgeActions.value, newAction]
@@ -163,24 +142,8 @@ function removeEdgeAction(index: number) {
             v-model="edgeCondition"
             placeholder="e.g. user confirmed order"
             size="lg"
-            class="font-mono text-sm"
+            class="w-full"
           />
-        </UFormField>
-
-        <UFormField
-          label="Target Node"
-          description="Which node should the conversation flow to when this condition is met"
-          required
-        >
-          <USelect
-            v-model="edgeTargetNodeId"
-            :items="availableNodes"
-            placeholder="Select destination node"
-            size="lg"
-          />
-          <div class="text-xs text-gray-500 mt-2">
-            🎯 The conversation will continue at the selected node if the condition evaluates to true
-          </div>
         </UFormField>
       </div>
     </UCard>
@@ -257,7 +220,7 @@ function removeEdgeAction(index: number) {
                   {{ field.name || `Field ${index + 1}` }}
                 </span>
                 <UBadge
-                  :color="field.required ? 'red' : 'green'"
+                  :color="field.required ? 'error' : 'success'"
                   variant="subtle"
                   size="sm"
                 >
