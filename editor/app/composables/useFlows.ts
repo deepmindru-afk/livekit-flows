@@ -1,7 +1,7 @@
 import { computed } from 'vue'
 import { useStorage } from '@vueuse/core'
-import YAML from 'yaml'
 import type { ConversationFlow, FlowNode, NodePositionMap } from '@/types/flow'
+import { welcomeFlow, welcomeFlowPositions } from './welcomeFlow'
 
 type FlowRecord = ConversationFlow & { id: string, name: string }
 
@@ -17,8 +17,19 @@ export function useFlows() {
   const activeFlow = computed(() => flows.value.find(f => f.id === activeFlowId.value) || null)
   const activePositions = computed<NodePositionMap>(() => (activeFlowId.value ? positionsByFlowId.value[activeFlowId.value] || {} : {}))
 
+  if (flows.value.length === 0) {
+    createWelcomeFlow()
+  }
+
   function generateId(prefix: string) {
     return `${prefix}-${Math.random().toString(36).slice(2, 8)}${Date.now().toString(36).slice(-3)}`
+  }
+
+  async function createWelcomeFlow() {
+    const id = generateId('flow')
+    flows.value.push({ ...welcomeFlow, id, name: 'Welcome Example' })
+    positionsByFlowId.value[id] = { ...welcomeFlowPositions }
+    activeFlowId.value = id
   }
 
   function createFlow(name = 'Untitled Flow') {
