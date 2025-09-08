@@ -13,7 +13,7 @@ export function schemaToCanvas(flow: ConversationFlow, positions?: NodePositionM
       const row = Math.floor(idx / 4)
       pos[n.id] = { x: 120 + col * 260, y: 80 + row * 180 }
     }
-    return { id: n.id, type: 'flowNode', position: pos[n.id]!, data: n }
+    return { id: n.id, type: 'flowNode', position: pos[n.id]!, data: n, width: 200 }
   })
   const edges: VFEdge[] = []
   for (const node of flow.nodes) {

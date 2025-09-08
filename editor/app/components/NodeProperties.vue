@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed } from 'vue'
+import { computed, ref, watch } from 'vue'
 import { useFlows } from '@/composables/useFlows'
 import { useSelection } from '@/composables/useSelection'
 import type { ActionTrigger } from '@/types/flow'
@@ -11,6 +11,11 @@ const triggerTypeOptions = [
   { label: 'On Enter', value: 'on_enter' },
   { label: 'On Exit', value: 'on_exit' },
   { label: 'On Edge', value: 'on_edge' },
+]
+
+const responseModeOptions = [
+  { label: 'LLM Instruction', value: 'ai' },
+  { label: 'Static Text', value: 'static' },
 ]
 
 const selectedNode = computed(() => {
@@ -36,13 +41,44 @@ const nodeName = computed({
   },
 })
 
+const responseMode = ref('ai')
+
+// Watch for changes in selected node to update response mode
+watch(selectedNode, (newNode) => {
+  if (!newNode) {
+    responseMode.value = 'ai'
+    return
+  }
+  responseMode.value = newNode.static_text ? 'static' : 'ai'
+}, { immediate: true })
+
+// Watch for changes in response mode to update the node
+watch(responseMode, (newMode) => {
+  if (!selectedNode.value) return
+
+  flowsStore.updateActiveFlow((flow) => {
+    const node = flow.nodes.find(n => n.id === selectedNode.value!.id)
+    if (!node) return
+
+    if (newMode === 'static') {
+      node.instruction = undefined
+    }
+    else {
+      node.static_text = undefined
+    }
+  })
+})
+
 const nodeInstruction = computed({
   get: () => selectedNode.value?.instruction || '',
   set: (value: string) => {
     if (!selectedNode.value) return
     flowsStore.updateActiveFlow((flow) => {
       const node = flow.nodes.find(n => n.id === selectedNode.value!.id)
-      if (node) node.instruction = value || undefined
+      if (node) {
+        node.instruction = value || undefined
+        if (value) node.static_text = undefined
+      }
     })
   },
 })
@@ -53,7 +89,10 @@ const nodeStaticText = computed({
     if (!selectedNode.value) return
     flowsStore.updateActiveFlow((flow) => {
       const node = flow.nodes.find(n => n.id === selectedNode.value!.id)
-      if (node) node.static_text = value || undefined
+      if (node) {
+        node.static_text = value || undefined
+        if (value) node.instruction = undefined
+      }
     })
   },
 })
@@ -83,7 +122,7 @@ const nodeActions = computed({
 function addNodeAction() {
   if (!selectedNode.value) return
   const newAction = {
-    trigger_type: 'on_enter',
+    trigger_type: 'on_enter' as const,
     action_id: '',
   }
   nodeActions.value = [...nodeActions.value, newAction]
@@ -133,13 +172,29 @@ function removeNodeAction(index: number) {
         </div>
 
         <UFormField
+          label="Response Mode"
+          description="Choose how this node should respond to user input"
+          required
+        >
+          <URadioGroup
+            v-model="responseMode"
+            :items="responseModeOptions"
+            orientation="horizontal"
+            size="lg"
+            class="space-x-6"
+          />
+        </UFormField>
+
+        <UFormField
+          v-if="responseMode === 'ai'"
           label="AI Instructions"
           description="Instructions that guide the AI assistant's response for this node"
+          required
         >
           <UTextarea
             v-model="nodeInstruction"
             placeholder="Provide specific instructions for how the AI should respond at this point in the conversation..."
-            rows="8"
+            :rows="8"
             size="lg"
             class="font-mono text-sm w-full"
           />
@@ -149,18 +204,20 @@ function removeNodeAction(index: number) {
         </UFormField>
 
         <UFormField
+          v-if="responseMode === 'static'"
           label="Static Response"
-          description="Fixed text to display (optional, overrides AI response)"
+          description="Fixed text to display to the user"
+          required
         >
           <UTextarea
             v-model="nodeStaticText"
             placeholder="Thank you for your inquiry. A representative will contact you shortly."
-            rows="3"
+            :rows="6"
             size="lg"
             class="w-full"
           />
           <div class="text-xs text-gray-500 mt-2">
-            📝 If provided, this text will be shown instead of generating an AI response
+            📝 This exact text will be shown to the user instead of an AI-generated response
           </div>
         </UFormField>
 
