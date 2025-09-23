@@ -37,6 +37,7 @@ dev = [
     "pytest-aiohttp>=1.1.0",
     "ruff>=0.13.1",
     "ty>=0.0.1a21",
+    "pytest-repeat>=0.9.4",
 ]
 examples = [
     "livekit-agents>=1.2.11",
