@@ -15,10 +15,10 @@ export function useExport() {
     return format === 'yaml' ? YAML.stringify(payload) : JSON.stringify(payload, null, 2)
   }
 
-  const generateWorkerCode = (flow: ConversationFlow): string => {
-    const yamlContent = generateFlowContent(flow, 'yaml')
-    return workerTemplate.replace('{{YAML_CONTENT}}', yamlContent)
-  }
+  //const generateWorkerCode = (flow: ConversationFlow): string => {
+  //  const yamlContent = generateFlowContent(flow, 'yaml')
+  //  return workerTemplate.replace('{{YAML_CONTENT}}', yamlContent)
+  //}
 
   const downloadFile = (content: string, filename: string) => {
     const blob = new Blob([content], { type: 'text/plain' })
@@ -45,7 +45,7 @@ export function useExport() {
 
   return {
     generateFlowContent,
-    generateWorkerCode,
+    //generateWorkerCode,
     downloadFile,
     copyToClipboard,
   }
