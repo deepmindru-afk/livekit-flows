@@ -75,15 +75,15 @@ function handleExportYaml() {
   }
 }
 
-function handleExportWorkerCode() {
-  const code = flowExportStore.getWorkerCode()
-  if (code) {
-    exportCode.value = code
-    exportFormat.value = 'python'
-    exportFilename.value = `${flowExportStore.activeFlow.value?.name || 'flow'}_worker.py`
-    exportModalOpen.value = true
-  }
-}
+//function handleExportWorkerCode() {
+//  const code = flowExportStore.getWorkerCode()
+//  if (code) {
+//    exportCode.value = code
+//    exportFormat.value = 'python'
+//    exportFilename.value = `${flowExportStore.activeFlow.value?.name || 'flow'}_worker.py`
+//    exportModalOpen.value = true
+//  }
+//}
 
 function handleAddNode() {
   flowsStore.addNode({ x: 300, y: 200 })
@@ -158,7 +158,7 @@ if (flowsStore.flows.value.length === 0) {
         id="flow-editor"
         class="flex-grow-3"
       >
-        <UDashboardNavbar title="Livekit Flows Editor">
+        <UDashboardNavbar title="Flows Editor">
           <template #right>
             <UButton
               size="sm"
@@ -182,7 +182,7 @@ if (flowsStore.flows.value.length === 0) {
                 [
                   { label: 'JSON', icon: 'i-heroicons-document-text', onSelect: handleExportJson },
                   { label: 'YAML', icon: 'i-heroicons-document-text', onSelect: handleExportYaml },
-                  { label: 'LiveKit Worker', icon: 'i-heroicons-code-bracket', onSelect: handleExportWorkerCode },
+                  //{ label: 'Worker', icon: 'i-heroicons-code-bracket', onSelect: handleExportWorkerCode },
                 ],
               ]"
             >
