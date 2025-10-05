@@ -1,17 +1,17 @@
 <script setup lang="ts">
-import { computed } from 'vue'
+import { computed, ref } from 'vue'
 import { useFlows } from '@/composables/useFlows'
 import type { CustomAction } from '@/types/flow'
 
-const httpMethodOptions = [
-  { label: 'GET', value: 'GET' },
-  { label: 'POST', value: 'POST' },
-  { label: 'PUT', value: 'PUT' },
-  { label: 'DELETE', value: 'DELETE' },
-  { label: 'PATCH', value: 'PATCH' },
-]
-
 const flowsStore = useFlows()
+
+const isEditModalOpen = ref(false)
+const editingActionIndex = ref<number | null>(null)
+
+const editingAction = computed(() => {
+  if (editingActionIndex.value === null) return null
+  return globalActions.value[editingActionIndex.value] || null
+})
 
 const flowName = computed({
   get: () => flowsStore.activeFlow.value?.name || '',
@@ -69,28 +69,6 @@ const envVarList = computed({
   },
 })
 
-const getHeadersList = (actionIndex: number) => {
-  return computed({
-    get: () => {
-      const action = globalActions.value[actionIndex]
-      if (!action?.headers) return []
-      return Object.entries(action.headers).map(([key, value]) => ({ key, value }))
-    },
-    set: (list: Array<{ key: string, value: string }>) => {
-      const action = globalActions.value[actionIndex]
-      if (!action) return
-
-      const newHeaders: Record<string, string> = {}
-      list.forEach((item) => {
-        if (item.key.trim()) {
-          newHeaders[item.key] = item.value
-        }
-      })
-      action.headers = newHeaders
-    },
-  })
-}
-
 function addEnvVar() {
   const currentKeys = envVarList.value.map(item => item.key)
   let counter = 1
@@ -104,22 +82,6 @@ function addEnvVar() {
 
 function removeEnvVar(index: number) {
   envVarList.value = envVarList.value.filter((_, i) => i !== index)
-}
-
-function removeHeader(actionIndex: number, headerIndex: number) {
-  getHeadersList(actionIndex).value = getHeadersList(actionIndex).value.filter((_, i) => i !== headerIndex)
-}
-
-function addHeader(actionIndex: number) {
-  const currentHeaders = getHeadersList(actionIndex).value
-  const currentKeys = currentHeaders.map(item => item.key)
-  let counter = 1
-  const newKey = 'Header'
-  while (currentKeys.includes(`${newKey}${counter > 1 ? counter : ''}`)) {
-    counter++
-  }
-  const finalKey = counter > 1 ? `${newKey}${counter}` : newKey
-  getHeadersList(actionIndex).value = [...currentHeaders, { key: finalKey, value: '' }]
 }
 
 const globalActions = computed({
@@ -150,18 +112,19 @@ function removeGlobalAction(index: number) {
   globalActions.value = newActions
 }
 
-const bodyTemplatePlaceholder = '{"name": "{{USER_NAME}}", "email": "{{USER_EMAIL}}"}'
-const usageHint = 'Reference these variables in actions using {{VAR_NAME}} syntax'
-const urlHint = 'Use {{VARIABLE_NAME}} to reference environment variables'
-
-function updateGlobalAction(index: number, field: keyof CustomAction, value: unknown) {
-  const newActions = [...globalActions.value]
-  const action = newActions[index]
-  if (action) {
-    (action as Record<keyof CustomAction, unknown>)[field] = value
-    globalActions.value = newActions
-  }
+function openEditModal(index: number) {
+  editingActionIndex.value = index
+  isEditModalOpen.value = true
 }
+
+function updateAction(updatedAction: CustomAction) {
+  if (editingActionIndex.value === null) return
+  const newActions = [...globalActions.value]
+  newActions[editingActionIndex.value] = updatedAction
+  globalActions.value = newActions
+}
+
+const usageHint = 'Reference these variables in actions using {{VAR_NAME}} syntax'
 </script>
 
 <template>
@@ -393,271 +356,26 @@ function updateGlobalAction(index: number, field: keyof CustomAction, value: unk
 
       <div
         v-else
-        class="space-y-6"
+        class="space-y-3"
       >
-        <UCard
+        <ActionListItem
           v-for="(action, index) in globalActions"
           :key="action.id"
-          class="border border-gray-200 shadow-sm"
-        >
-          <template #header>
-            <div class="flex items-center justify-between">
-              <div class="flex items-center gap-3">
-                <div class="flex items-center gap-2">
-                  <UIcon
-                    name="i-heroicons-cog-6-tooth"
-                    class="h-4 w-4 text-purple-600"
-                  />
-                  <span class="text-sm font-medium text-gray-900">
-                    {{ action.name || `Action ${index + 1}` }}
-                  </span>
-                  <UBadge
-                    :color="action.method === 'GET' ? 'success' : action.method === 'POST' ? 'primary' : action.method === 'PUT' ? 'warning' : action.method === 'DELETE' ? 'error' : 'neutral'"
-                    variant="subtle"
-                    size="sm"
-                  >
-                    {{ action.method }}
-                  </UBadge>
-                </div>
-              </div>
-              <UButton
-                size="sm"
-                variant="ghost"
-                color="error"
-                @click="removeGlobalAction(index)"
-              >
-                <UIcon name="i-heroicons-trash" />
-                <span class="sr-only">Remove action</span>
-              </UButton>
-            </div>
-          </template>
-
-          <div class="space-y-6">
-            <UFormField
-              label="Action ID"
-              description="Unique identifier for this action"
-              required
-            >
-              <UInput
-                v-model="action.id"
-                placeholder="send_email, create_user"
-                size="sm"
-                class="font-mono text-sm w-full"
-                @input="updateGlobalAction(index, 'id', $event)"
-              />
-            </UFormField>
-
-            <UFormField
-              label="Action Name"
-              description="A descriptive name for this action"
-              required
-            >
-              <UInput
-                v-model="action.name"
-                placeholder="Send Email, Create User, Fetch Data"
-                size="sm"
-                class="w-full"
-                @input="updateGlobalAction(index, 'name', $event)"
-              />
-            </UFormField>
-
-            <UFormField
-              label="HTTP Method"
-              description="The HTTP method to use for the request"
-              required
-            >
-              <USelect
-                v-model="action.method"
-                :items="httpMethodOptions"
-                placeholder="Select HTTP method"
-                size="sm"
-                class="w-full"
-                @update:model-value="updateGlobalAction(index, 'method', $event)"
-              />
-            </UFormField>
-
-            <div>
-              <h6 class="text-sm font-medium text-gray-900 mb-4 flex items-center gap-2">
-                <UIcon
-                  name="i-heroicons-globe-alt"
-                  class="h-4 w-4 text-gray-600"
-                />
-                Request Configuration
-              </h6>
-
-              <div class="space-y-4">
-                <UFormField
-                  label="URL"
-                  description="The endpoint URL for the HTTP request"
-                  required
-                >
-                  <UInput
-                    v-model="action.url"
-                    placeholder="https://api.example.com/v1/users"
-                    size="sm"
-                    class="w-full"
-                    @input="updateGlobalAction(index, 'url', $event)"
-                  />
-                  <div class="text-xs text-gray-500 mt-2">
-                    💡 {{ urlHint }}
-                  </div>
-                </UFormField>
-
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <UFormField
-                    label="Timeout (seconds)"
-                    description="Maximum time to wait for the response"
-                  >
-                    <UInput
-                      v-model.number="action.timeout"
-                      type="number"
-                      placeholder="30"
-                      size="sm"
-                      @input="updateGlobalAction(index, 'timeout', parseInt($event) || 30)"
-                    />
-                  </UFormField>
-
-                  <UFormField
-                    label="Store Response As"
-                    description="Variable name to store the API response"
-                  >
-                    <UInput
-                      v-model="action.store_response_as"
-                      placeholder="api_response"
-                      size="sm"
-                      @input="updateGlobalAction(index, 'store_response_as', $event)"
-                    />
-                  </UFormField>
-                </div>
-              </div>
-            </div>
-
-            <div v-if="action.method === 'POST' || action.method === 'PUT' || action.method === 'PATCH'">
-              <h6 class="text-sm font-medium text-gray-900 mb-4 flex items-center gap-2">
-                <UIcon
-                  name="i-heroicons-document-text"
-                  class="h-4 w-4 text-gray-600"
-                />
-                Request Body
-              </h6>
-
-              <UFormField
-                label="Body Template"
-                description="JSON payload or template for the request body"
-              >
-                <UTextarea
-                  v-model="action.body_template"
-                  :placeholder="bodyTemplatePlaceholder"
-                  size="sm"
-                  :rows="4"
-                  class="font-mono text-sm w-full"
-                  @input="updateGlobalAction(index, 'body_template', $event)"
-                />
-                <div class="text-xs text-gray-500 mt-2">
-                  📝 Supports JSON and variable interpolation
-                </div>
-              </UFormField>
-            </div>
-
-            <UFormField
-              label="Description"
-              description="Optional description to document what this action does"
-            >
-              <UTextarea
-                v-model="action.description"
-                placeholder="Describe the purpose and behavior of this action"
-                size="sm"
-                :rows="2"
-                class="w-full"
-                @input="updateGlobalAction(index, 'description', $event)"
-              />
-            </UFormField>
-          </div>
-          <div class="mt-6">
-            <div class="flex items-center justify-between mb-4">
-              <h6 class="text-sm font-medium text-gray-900 flex items-center gap-2">
-                <UIcon
-                  name="i-heroicons-bars-3"
-                  class="h-4 w-4 text-gray-600"
-                />
-                HTTP Headers
-              </h6>
-              <UButton
-                size="xs"
-                variant="outline"
-                color="primary"
-                @click="addHeader(index)"
-              >
-                <UIcon name="i-heroicons-plus" />
-                Add Header
-              </UButton>
-            </div>
-
-            <div
-              v-if="!action.headers || Object.keys(action.headers).length === 0"
-              class="text-center py-6 bg-gray-50 rounded-lg"
-            >
-              <UIcon
-                name="i-heroicons-bars-3"
-                class="mx-auto h-8 w-8 text-gray-300 mb-2"
-              />
-              <p class="text-sm text-gray-500">
-                No headers configured
-              </p>
-              <p class="text-xs text-gray-400 mt-1">
-                Add headers like <code class="bg-white px-1 py-0.5 rounded text-xs">Authorization: Bearer token</code>
-              </p>
-            </div>
-
-            <div
-              v-else
-              class="space-y-3"
-            >
-              <div
-                v-for="(header, headerIndex) in getHeadersList(index).value"
-                :key="headerIndex"
-                class="group p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors"
-              >
-                <div class="flex items-center gap-3">
-                  <div class="flex-1 min-w-0">
-                    <div class="flex items-center gap-3">
-                      <div class="flex-1">
-                        <UInput
-                          v-model="header.key"
-                          placeholder="Header-Name"
-                          size="xs"
-                          class="w-full font-mono text-xs font-medium"
-                        />
-                      </div>
-                      <div class="text-gray-400 text-xs font-mono px-2">
-                        :
-                      </div>
-                      <div class="flex-1">
-                        <UInput
-                          v-model="header.value"
-                          placeholder="header value"
-                          size="xs"
-                          class="w-full font-mono text-xs"
-                        />
-                      </div>
-                    </div>
-                  </div>
-                  <UButton
-                    size="xs"
-                    variant="ghost"
-                    color="error"
-                    class="opacity-0 group-hover:opacity-100 transition-opacity"
-                    @click="removeHeader(index, headerIndex)"
-                  >
-                    <UIcon name="i-heroicons-trash" />
-                    <span class="sr-only">Remove header</span>
-                  </UButton>
-                </div>
-              </div>
-            </div>
-          </div>
-        </UCard>
+          :action="action"
+          :index="index"
+          @edit="openEditModal(index)"
+          @delete="removeGlobalAction(index)"
+        />
       </div>
     </UCard>
+
+    <!-- Action Edit Modal -->
+    <ActionEditModal
+      v-if="editingAction"
+      v-model:open="isEditModalOpen"
+      :action="editingAction"
+      :index="editingActionIndex!"
+      @update:action="updateAction"
+    />
   </div>
 </template>
