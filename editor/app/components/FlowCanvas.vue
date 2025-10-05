@@ -38,12 +38,22 @@ watch(
   { immediate: true },
 )
 
+function isValidConnection(params: Connection) {
+  if (!flows.activeFlow.value) return false
+
+  const src = flows.activeFlow.value.nodes.find(n => n.id === params.source)
+  if (!src) return false
+
+  return !src.is_final
+}
+
 function onConnect(params: Connection) {
   if (!flows.activeFlow.value) return
 
   flows.updateActiveFlow((f) => {
     const src = f.nodes.find(n => n.id === params.source)
     if (!src) return
+
     const id = `e-${params.source}-${params.target}-${Date.now()}`
     src.edges = src.edges || []
     src.edges.push({
@@ -131,6 +141,7 @@ function onKeyDown(event: KeyboardEvent) {
       :nodes-draggable="true"
       :nodes-connectable="true"
       :elements-selectable="true"
+      :is-valid-connection="isValidConnection"
       @connect="onConnect"
       @node-click="onNodeClick"
       @edge-click="onEdgeClick"
