@@ -10,7 +10,6 @@ const selection = useSelection()
 const triggerTypeOptions = [
   { label: 'On Enter', value: 'on_enter' },
   { label: 'On Exit', value: 'on_exit' },
-  { label: 'On Edge', value: 'on_edge' },
 ]
 
 const responseModeOptions = [
@@ -334,9 +333,6 @@ function removeNodeAction(index: number) {
                 </template>
                 <template v-if="action.trigger_type === 'on_exit'">
                   ↗️ <strong>On Exit:</strong> Runs when a user leaves this node
-                </template>
-                <template v-if="action.trigger_type === 'on_edge'">
-                  ➡️ <strong>On Edge:</strong> Runs when following an outgoing edge
                 </template>
               </div>
             </div>

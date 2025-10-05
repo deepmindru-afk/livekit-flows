@@ -19,4 +19,3 @@ class HttpMethod(str, Enum):
 class ActionTriggerType(str, Enum):
     ON_ENTER = "on_enter"
     ON_EXIT = "on_exit"
-    ON_EDGE = "on_edge"
