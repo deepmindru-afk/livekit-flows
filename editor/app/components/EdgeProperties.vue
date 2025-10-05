@@ -1,18 +1,11 @@
 <script setup lang="ts">
-import { computed } from 'vue'
+import { computed, ref } from 'vue'
 import { useFlows } from '@/composables/useFlows'
 import { useSelection } from '@/composables/useSelection'
 import type { DataField } from '@/types/flow'
 
 const flowsStore = useFlows()
 const selection = useSelection()
-
-const fieldTypeOptions = [
-  { label: 'String', value: 'string' },
-  { label: 'Integer', value: 'integer' },
-  { label: 'Float', value: 'float' },
-  { label: 'Boolean', value: 'boolean' },
-]
 
 const selectedEdge = computed(() => {
   if (!selection.selectedEdgeId.value || !flowsStore.activeFlow.value) return null
@@ -52,15 +45,43 @@ const edgeDataFields = computed({
   },
 })
 
+// Modal management
+const isEditModalOpen = ref(false)
+const editingFieldIndex = ref<number | null>(null)
+const editingField = ref<DataField | null>(null)
+
 function addEdgeDataField() {
   if (!selectedEdge.value) return
-  const newField = {
+  const newField: DataField = {
     name: '',
     type: 'string' as const,
     description: '',
     required: false,
   }
-  edgeDataFields.value = [...edgeDataFields.value, newField]
+  const newFields = [...edgeDataFields.value, newField]
+  edgeDataFields.value = newFields
+
+  // Open modal for the newly added field
+  editingFieldIndex.value = newFields.length - 1
+  editingField.value = { ...newField }
+  isEditModalOpen.value = true
+}
+
+function editField(index: number) {
+  editingFieldIndex.value = index
+  editingField.value = { ...edgeDataFields.value[index] } as DataField
+  isEditModalOpen.value = true
+}
+
+function updateField(updatedField: DataField) {
+  if (editingFieldIndex.value === null) return
+
+  const newFields = [...edgeDataFields.value]
+  newFields[editingFieldIndex.value] = updatedField
+  edgeDataFields.value = newFields
+
+  editingFieldIndex.value = null
+  editingField.value = null
 }
 
 function removeEdgeDataField(index: number) {
@@ -160,95 +181,30 @@ function removeEdgeDataField(index: number) {
 
       <div
         v-else
-        class="space-y-4"
+        class="space-y-3"
       >
-        <UCard
+        <DataFieldListItem
           v-for="(field, index) in edgeDataFields"
           :key="index"
-          class="border border-gray-200 shadow-sm"
-        >
-          <template #header>
-            <div class="flex items-center justify-between">
-              <div class="flex items-center gap-2">
-                <UIcon
-                  name="i-heroicons-tag"
-                  class="h-4 w-4 text-orange-600"
-                />
-                <span class="text-sm font-medium text-gray-900">
-                  {{ field.name || `Field ${index + 1}` }}
-                </span>
-                <UBadge
-                  :color="field.required ? 'error' : 'success'"
-                  variant="subtle"
-                  size="sm"
-                >
-                  {{ field.required ? 'Required' : 'Optional' }}
-                </UBadge>
-              </div>
-              <UButton
-                size="sm"
-                variant="ghost"
-                color="error"
-                @click="removeEdgeDataField(index)"
-              >
-                <UIcon name="i-heroicons-trash" />
-                <span class="sr-only">Remove field</span>
-              </UButton>
-            </div>
-          </template>
-
-          <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <UFormField
-              label="Field Name"
-              description="Variable name for the collected data"
-              required
-            >
-              <UInput
-                v-model="field.name"
-                placeholder="e.g., user_email, phone_number"
-                size="sm"
-              />
-            </UFormField>
-
-            <UFormField
-              label="Data Type"
-              description="Expected format of the user input"
-              required
-            >
-              <USelect
-                v-model="field.type"
-                :items="fieldTypeOptions"
-                placeholder="Select type"
-                size="sm"
-              />
-            </UFormField>
-
-            <UFormField
-              label="Description"
-              description="Instructions for the user"
-              required
-            >
-              <UInput
-                v-model="field.description"
-                placeholder="e.g., Please enter your email address"
-                size="sm"
-              />
-            </UFormField>
-          </div>
-
-          <div class="mt-4 pt-4 border-t border-gray-200">
-            <USwitch
-              v-model="field.required"
-              label="Required Field"
-              description="User must provide this information to continue"
-            />
-          </div>
-        </UCard>
+          :field="field"
+          :index="index"
+          @edit="editField(index)"
+          @delete="removeEdgeDataField(index)"
+        />
 
         <div class="text-xs text-gray-500 bg-orange-50 p-3 rounded-lg">
           📝 <strong>Data Collection:</strong> Fields will be collected in order before the conversation follows this edge. Required fields must be provided.
         </div>
       </div>
     </UCard>
+
+    <!-- Edit Modal -->
+    <DataFieldEditModal
+      v-if="editingField && editingFieldIndex !== null"
+      v-model:open="isEditModalOpen"
+      :field="editingField"
+      :index="editingFieldIndex"
+      @update:field="updateField"
+    />
   </div>
 </template>
