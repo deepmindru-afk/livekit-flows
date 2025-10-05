@@ -10,7 +10,7 @@ readme = "README.md"
 license = "MIT"
 requires-python = ">=3.12"
 dependencies = [
-    "livekit-agents>=1.2.11",
+    "livekit-agents>=1.2.14",
     "pydantic>=2.11.9",
     "aiohttp>=3.12.15",
     "jinja2>=3.1.6",
@@ -40,10 +40,10 @@ dev = [
     "pytest-repeat>=0.9.4",
 ]
 examples = [
-    "livekit-agents>=1.2.11",
-    "livekit-plugins-openai>=1.2.11",
-    "livekit-plugins-cartesia>=1.2.11",
-    "livekit-plugins-deepgram>=1.2.11",
-    "livekit-plugins-silero>=1.2.11",
+    "livekit-agents>=1.2.14",
+    "livekit-plugins-openai>=1.2.14",
+    "livekit-plugins-cartesia>=1.2.14",
+    "livekit-plugins-deepgram>=1.2.14",
+    "livekit-plugins-silero>=1.2.14",
     "python-dotenv>=1.1.1",
 ]
