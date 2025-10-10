@@ -112,41 +112,6 @@ class FlowAgent(Agent):
             except Exception as e:
                 logger.error(f"Error executing node actions: {e}")
 
-    async def _execute_edge_actions(self, edge_id: str):
-        edge = next(
-            (edge for edge in self._current_node.edges if edge.id == edge_id), None
-        )
-
-        if not edge:
-            logger.warning(f"Edge {edge_id} not found")
-            return
-
-        actions_to_execute = [
-            action
-            for action in edge.actions
-            if action.trigger_type == ActionTriggerType.ON_EDGE
-        ]
-
-        if not actions_to_execute:
-            return
-
-        logger.info(
-            f"Executing {len(actions_to_execute)} edge actions for edge {edge_id}"
-        )
-
-        tasks = []
-        for action in actions_to_execute:
-            task = self._action_executor.execute_action(
-                action.action_id, self.session.userdata
-            )
-            tasks.append(task)
-
-        if tasks:
-            try:
-                await asyncio.gather(*tasks, return_exceptions=True)
-            except Exception as e:
-                logger.error(f"Error executing edge actions: {e}")
-
     def _render_instruction(self, instruction: str) -> str:
         try:
             userdata = self.session.userdata
@@ -169,10 +134,6 @@ class FlowAgent(Agent):
         )
         if not target_node:
             raise ValueError(f"Target node {target_node_id} not found in flow")
-
-        if edge_id:
-            async with self._action_executor:
-                await self._execute_edge_actions(edge_id)
 
         new_agent = FlowAgent(
             self._flow, target_node, self.chat_ctx, self._action_executor

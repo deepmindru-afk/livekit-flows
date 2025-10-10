@@ -2,7 +2,7 @@ import { object, string, array, boolean, optional, record, union, literal, pipe,
 
 export const FieldType = union([literal('string'), literal('integer'), literal('float'), literal('boolean')])
 export const HttpMethod = union([literal('GET'), literal('POST'), literal('PUT'), literal('DELETE'), literal('PATCH')])
-export const ActionTriggerType = union([literal('on_enter'), literal('on_exit'), literal('on_edge')])
+export const ActionTriggerType = union([literal('on_enter'), literal('on_exit')])
 
 export const DataFieldSchema = object({
   name: string(),
