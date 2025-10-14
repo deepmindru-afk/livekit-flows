@@ -1,6 +1,5 @@
-from .enums import FieldType, HttpMethod, ActionTriggerType
+from .enums import HttpMethod, ActionTriggerType
 from .models import (
-    DataField,
     Edge,
     FlowNode,
     ConversationFlow,
@@ -9,10 +8,8 @@ from .models import (
 )
 
 __all__ = [
-    "FieldType",
     "HttpMethod",
     "ActionTriggerType",
-    "DataField",
     "CustomAction",
     "ActionTrigger",
     "Edge",

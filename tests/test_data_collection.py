@@ -1,4 +1,5 @@
 import pytest
+from pydantic import BaseModel, Field
 from livekit.agents import AgentSession
 from livekit.plugins import openai
 from livekit_flows import (
@@ -6,9 +7,19 @@ from livekit_flows import (
     ConversationFlow,
     FlowNode,
     Edge,
-    DataField,
-    FieldType,
 )
+
+
+class NameInput(BaseModel):
+    name: str = Field(description="The user's full name")
+
+
+class AgeInput(BaseModel):
+    age: int = Field(description="The user's age in years")
+
+
+class EmailInput(BaseModel):
+    email: str = Field(description="The user's email address")
 
 
 survey_flow = ConversationFlow(
@@ -24,14 +35,7 @@ survey_flow = ConversationFlow(
                     condition="User provided their name",
                     id="collect_name",
                     target_node_id="ask_age",
-                    collect_data=[
-                        DataField(
-                            name="name",
-                            type=FieldType.STRING,
-                            description="The user's full name",
-                            required=True,
-                        )
-                    ],
+                    input_schema=NameInput,
                 )
             ],
         ),
@@ -44,14 +48,7 @@ survey_flow = ConversationFlow(
                     condition="User provided their age",
                     id="collect_age",
                     target_node_id="ask_email",
-                    collect_data=[
-                        DataField(
-                            name="age",
-                            type=FieldType.INTEGER,
-                            description="The user's age in years",
-                            required=True,
-                        )
-                    ],
+                    input_schema=AgeInput,
                 )
             ],
         ),
@@ -64,14 +61,7 @@ survey_flow = ConversationFlow(
                     condition="User provided their email",
                     id="collect_email",
                     target_node_id="thank_you",
-                    collect_data=[
-                        DataField(
-                            name="email",
-                            type=FieldType.STRING,
-                            description="The user's email address",
-                            required=True,
-                        )
-                    ],
+                    input_schema=EmailInput,
                 )
             ],
         ),

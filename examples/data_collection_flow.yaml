@@ -1,0 +1,69 @@
+system_prompt: "You are a friendly survey assistant collecting user information. Be polite and guide users through the survey."
+
+initial_node: "welcome"
+
+nodes:
+  - id: "welcome"
+    name: "Welcome"
+    static_text: "Hi! I'd like to conduct a quick survey. What's your name?"
+    edges:
+      - condition: "User provided their name"
+        id: "collect_name"
+        target_node_id: "ask_age"
+        input_schema:
+          type: "object"
+          properties:
+            name:
+              type: "string"
+              description: "The user's full name"
+          required: ["name"]
+          additionalProperties: false
+
+  - id: "ask_age"
+    name: "Ask Age"
+    instruction: "Thank you {{ userdata.name }}! How old are you?"
+    edges:
+      - condition: "User provided their age"
+        id: "collect_age"
+        target_node_id: "ask_email"
+        input_schema:
+          type: "object"
+          properties:
+            age:
+              type: "integer"
+              description: "The user's age in years"
+              minimum: 0
+              maximum: 120
+          required: ["age"]
+          additionalProperties: false
+
+  - id: "ask_email"
+    name: "Ask Email"
+    instruction: "Great! And what's your email address, {{ userdata.name }}?"
+    edges:
+      - condition: "User provided their email"
+        id: "collect_email"
+        target_node_id: "thank_you"
+        input_schema:
+          type: "object"
+          properties:
+            email:
+              type: "string"
+              description: "The user's email address"
+              format: "email"
+          required: ["email"]
+          additionalProperties: false
+
+  - id: "thank_you"
+    name: "Thank You"
+    instruction: |
+      Thank you for participating in our survey, {{ userdata.name }}!
+
+      Here's what we collected:
+      - Name: {{ userdata.name }}
+      - Age: {{ userdata.age }}
+      - Email: {{ userdata.email }}
+
+      Have a great day!
+    is_final: true
+

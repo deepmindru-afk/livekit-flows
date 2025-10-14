@@ -1,8 +1,8 @@
-from typing import Self, Union
+from typing import Self, Union, Any
 from pathlib import Path
 
-from pydantic import BaseModel, Field
-from .enums import FieldType, HttpMethod, ActionTriggerType
+from pydantic import BaseModel, Field, field_validator
+from .enums import HttpMethod, ActionTriggerType
 from ..loaders import (
     load_from_yaml_file,
     load_from_yaml_string,
@@ -10,13 +10,6 @@ from ..loaders import (
     load_from_json_string,
     load_from_file,
 )
-
-
-class DataField(BaseModel):
-    name: str
-    type: FieldType
-    description: str
-    required: bool = False
 
 
 class CustomAction(BaseModel):
@@ -40,8 +33,28 @@ class Edge(BaseModel):
     condition: str
     id: str
     target_node_id: str | None = None
-    collect_data: list[DataField] = Field(default_factory=list)
+    input_schema: dict[str, Any] | type[BaseModel] | None = None
     actions: list[ActionTrigger] = Field(default_factory=list)
+
+    @field_validator("input_schema", mode="before")
+    @classmethod
+    def convert_pydantic_to_schema(cls, v):
+        if v is None:
+            return None
+
+        if isinstance(v, dict):
+            return v
+
+        if isinstance(v, type) and issubclass(v, BaseModel):
+            schema = v.model_json_schema()
+            return {
+                "type": "object",
+                "properties": schema.get("properties", {}),
+                "required": schema.get("required", []),
+                "additionalProperties": schema.get("additionalProperties", False),
+            }
+
+        return v
 
 
 class FlowNode(BaseModel):

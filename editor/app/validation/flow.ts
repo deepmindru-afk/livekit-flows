@@ -1,15 +1,7 @@
-import { object, string, array, boolean, optional, record, union, literal, pipe, minLength, number } from 'valibot'
+import { object, string, array, boolean, optional, record, union, literal, pipe, minLength, number, any } from 'valibot'
 
-export const FieldType = union([literal('string'), literal('integer'), literal('float'), literal('boolean')])
 export const HttpMethod = union([literal('GET'), literal('POST'), literal('PUT'), literal('DELETE'), literal('PATCH')])
 export const ActionTriggerType = union([literal('on_enter'), literal('on_exit')])
-
-export const DataFieldSchema = object({
-  name: string(),
-  type: FieldType,
-  description: string(),
-  required: optional(boolean()),
-})
 
 export const ActionTriggerSchema = object({
   trigger_type: ActionTriggerType,
@@ -32,7 +24,7 @@ export const EdgeSchema = object({
   id: string(),
   condition: string(),
   target_node_id: optional(string()),
-  collect_data: optional(array(DataFieldSchema)),
+  input_schema: optional(record(string(), any())),
   actions: optional(array(ActionTriggerSchema)),
 })
 

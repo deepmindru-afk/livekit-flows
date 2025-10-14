@@ -10,8 +10,6 @@ from livekit_flows import (
     HttpMethod,
     ActionTrigger,
     ActionTriggerType,
-    DataField,
-    FieldType,
 )
 from aiohttp.web import Application, json_response
 
@@ -59,14 +57,17 @@ user_profile_flow = ConversationFlow(
                     condition="User provided name",
                     id="collect_name_data",
                     target_node_id="collect_email",
-                    collect_data=[
-                        DataField(
-                            name="name",
-                            type=FieldType.STRING,
-                            description="User's full name",
-                            required=True,
-                        )
-                    ],
+                    input_schema={
+                        "type": "object",
+                        "properties": {
+                            "name": {
+                                "type": "string",
+                                "description": "User's full name",
+                            }
+                        },
+                        "required": ["name"],
+                        "additionalProperties": False,
+                    },
                 )
             ],
         ),
@@ -79,14 +80,17 @@ user_profile_flow = ConversationFlow(
                     condition="User provided email",
                     id="collect_email_data",
                     target_node_id="collect_age",
-                    collect_data=[
-                        DataField(
-                            name="email",
-                            type=FieldType.STRING,
-                            description="User's email address",
-                            required=True,
-                        )
-                    ],
+                    input_schema={
+                        "type": "object",
+                        "properties": {
+                            "email": {
+                                "type": "string",
+                                "description": "User's email address",
+                            }
+                        },
+                        "required": ["email"],
+                        "additionalProperties": False,
+                    },
                 )
             ],
         ),
@@ -99,14 +103,17 @@ user_profile_flow = ConversationFlow(
                     condition="User provided age",
                     id="collect_age_data",
                     target_node_id="collect_preferences",
-                    collect_data=[
-                        DataField(
-                            name="age",
-                            type=FieldType.INTEGER,
-                            description="User's age",
-                            required=True,
-                        )
-                    ],
+                    input_schema={
+                        "type": "object",
+                        "properties": {
+                            "age": {
+                                "type": "integer",
+                                "description": "User's age",
+                            }
+                        },
+                        "required": ["age"],
+                        "additionalProperties": False,
+                    },
                 )
             ],
         ),
@@ -119,14 +126,17 @@ user_profile_flow = ConversationFlow(
                     condition="User provided cuisine preference",
                     id="collect_cuisine_data",
                     target_node_id="collect_dietary",
-                    collect_data=[
-                        DataField(
-                            name="preferred_cuisine",
-                            type=FieldType.STRING,
-                            description="User's preferred cuisine",
-                            required=True,
-                        )
-                    ],
+                    input_schema={
+                        "type": "object",
+                        "properties": {
+                            "preferred_cuisine": {
+                                "type": "string",
+                                "description": "User's preferred cuisine",
+                            }
+                        },
+                        "required": ["preferred_cuisine"],
+                        "additionalProperties": False,
+                    },
                 )
             ],
         ),
@@ -139,14 +149,17 @@ user_profile_flow = ConversationFlow(
                     condition="User provided dietary info",
                     id="collect_dietary_data",
                     target_node_id="collect_budget",
-                    collect_data=[
-                        DataField(
-                            name="dietary_restrictions",
-                            type=FieldType.STRING,
-                            description="User's dietary restrictions",
-                            required=True,
-                        )
-                    ],
+                    input_schema={
+                        "type": "object",
+                        "properties": {
+                            "dietary_restrictions": {
+                                "type": "string",
+                                "description": "User's dietary restrictions",
+                            }
+                        },
+                        "required": ["dietary_restrictions"],
+                        "additionalProperties": False,
+                    },
                 )
             ],
         ),
@@ -159,14 +172,17 @@ user_profile_flow = ConversationFlow(
                     condition="User provided budget info",
                     id="collect_budget_data",
                     target_node_id="create_profile",
-                    collect_data=[
-                        DataField(
-                            name="budget_range",
-                            type=FieldType.STRING,
-                            description="User's budget range",
-                            required=True,
-                        )
-                    ],
+                    input_schema={
+                        "type": "object",
+                        "properties": {
+                            "budget_range": {
+                                "type": "string",
+                                "description": "User's budget range",
+                            }
+                        },
+                        "required": ["budget_range"],
+                        "additionalProperties": False,
+                    },
                 )
             ],
         ),

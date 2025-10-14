@@ -1,11 +1,16 @@
 <script setup lang="ts">
-import { computed, ref } from 'vue'
+import { computed } from 'vue'
 import { useFlows } from '@/composables/useFlows'
 import { useSelection } from '@/composables/useSelection'
-import type { DataField } from '@/types/flow'
+import { isSchemaEmpty } from '@/composables/useSchemaConverter'
+import JsonSchemaEditor from './JsonSchemaEditor.vue'
 
 const flowsStore = useFlows()
 const selection = useSelection()
+
+const schemaKey = computed(() => {
+  return `edge-schema-${flowsStore.activeFlowId.value}-${selection.selectedEdgeId.value}`
+})
 
 const selectedEdge = computed(() => {
   if (!selection.selectedEdgeId.value || !flowsStore.activeFlow.value) return null
@@ -31,64 +36,32 @@ const edgeCondition = computed({
   },
 })
 
-const edgeDataFields = computed({
-  get: () => selectedEdge.value?.edge.collect_data || [],
-  set: (value: DataField[]) => {
+const inputSchema = computed({
+  get: () => selectedEdge.value?.edge.input_schema || null,
+  set: (value: Record<string, unknown> | null) => {
     if (!selectedEdge.value) return
     flowsStore.updateActiveFlow((flow) => {
       const sourceNode = flow.nodes.find(n => n.id === selectedEdge.value!.sourceNode.id)
       if (sourceNode) {
         const edge = sourceNode.edges?.find(e => e.id === selectedEdge.value!.edge.id)
-        if (edge) edge.collect_data = value.length > 0 ? value : undefined
+        if (edge) {
+          edge.input_schema = (value && !isSchemaEmpty(value)) ? value : undefined
+        }
       }
     })
   },
 })
 
-// Modal management
-const isEditModalOpen = ref(false)
-const editingFieldIndex = ref<number | null>(null)
-const editingField = ref<DataField | null>(null)
-
-function addEdgeDataField() {
-  if (!selectedEdge.value) return
-  const newField: DataField = {
-    name: '',
-    type: 'string' as const,
-    description: '',
-    required: false,
-  }
-  const newFields = [...edgeDataFields.value, newField]
-  edgeDataFields.value = newFields
-
-  // Open modal for the newly added field
-  editingFieldIndex.value = newFields.length - 1
-  editingField.value = { ...newField }
-  isEditModalOpen.value = true
+function updateSchema(schema: Record<string, unknown>) {
+  inputSchema.value = schema
 }
 
-function editField(index: number) {
-  editingFieldIndex.value = index
-  editingField.value = { ...edgeDataFields.value[index] } as DataField
-  isEditModalOpen.value = true
-}
-
-function updateField(updatedField: DataField) {
-  if (editingFieldIndex.value === null) return
-
-  const newFields = [...edgeDataFields.value]
-  newFields[editingFieldIndex.value] = updatedField
-  edgeDataFields.value = newFields
-
-  editingFieldIndex.value = null
-  editingField.value = null
-}
-
-function removeEdgeDataField(index: number) {
-  const newFields = [...edgeDataFields.value]
-  newFields.splice(index, 1)
-  edgeDataFields.value = newFields
-}
+// Count properties in schema
+const propertyCount = computed(() => {
+  if (!inputSchema.value) return 0
+  const properties = inputSchema.value.properties || {}
+  return Object.keys(properties).length
+})
 </script>
 
 <template>
@@ -127,7 +100,6 @@ function removeEdgeDataField(index: number) {
       </div>
     </UCard>
 
-    <!-- Data Collection -->
     <UCard class="border-0 shadow-sm bg-white">
       <template #header>
         <div class="flex items-center gap-3">
@@ -137,74 +109,30 @@ function removeEdgeDataField(index: number) {
           />
           <div class="flex-1">
             <h4 class="text-base font-semibold text-gray-900">
-              Data Collection
+              Input Schema
+              <span
+                v-if="propertyCount > 0"
+                class="ml-2 text-sm font-normal text-gray-500"
+              >
+                ({{ propertyCount }} {{ propertyCount === 1 ? 'property' : 'properties' }})
+              </span>
             </h4>
             <p class="text-sm text-gray-600 mt-1">
-              Define what information to collect from the user before following this edge
+              Define data to collect from the user using JSON Schema
             </p>
           </div>
-          <UButton
-            size="sm"
-            variant="outline"
-            color="primary"
-            @click="addEdgeDataField"
-          >
-            <UIcon name="i-heroicons-plus" />
-            Add Field
-          </UButton>
         </div>
       </template>
 
-      <div
-        v-if="edgeDataFields.length === 0"
-        class="text-center py-8"
-      >
-        <UIcon
-          name="i-heroicons-clipboard-document-list"
-          class="mx-auto h-12 w-12 text-gray-300 mb-4"
-        />
-        <h5 class="text-sm font-medium text-gray-900 mb-2">
-          No data fields
-        </h5>
-        <p class="text-sm text-gray-500 mb-4">
-          Add fields to collect user input before proceeding along this path
-        </p>
-        <UButton
-          size="sm"
-          variant="outline"
-          @click="addEdgeDataField"
-        >
-          <UIcon name="i-heroicons-plus" />
-          Add Your First Field
-        </UButton>
-      </div>
+      <JsonSchemaEditor
+        :key="schemaKey"
+        :schema="inputSchema"
+        @update="updateSchema"
+      />
 
-      <div
-        v-else
-        class="space-y-3"
-      >
-        <DataFieldListItem
-          v-for="(field, index) in edgeDataFields"
-          :key="index"
-          :field="field"
-          :index="index"
-          @edit="editField(index)"
-          @delete="removeEdgeDataField(index)"
-        />
-
-        <div class="text-xs text-gray-500 bg-orange-50 p-3 rounded-lg">
-          📝 <strong>Data Collection:</strong> Fields will be collected in order before the conversation follows this edge. Required fields must be provided.
-        </div>
+      <div class="mt-4 text-xs text-gray-500 bg-orange-50 p-3 rounded-lg">
+        📝 <strong>Input Schema:</strong> Define the structure and validation rules for data collected from users. Uses JSON Schema format for flexible validation.
       </div>
     </UCard>
-
-    <!-- Edit Modal -->
-    <DataFieldEditModal
-      v-if="editingField && editingFieldIndex !== null"
-      v-model:open="isEditModalOpen"
-      :field="editingField"
-      :index="editingFieldIndex"
-      @update:field="updateField"
-    />
   </div>
 </template>

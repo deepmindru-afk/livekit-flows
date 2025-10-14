@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from livekit.agents import function_tool, RunContext
-from ..core import FieldType, Edge, FlowNode
+from ..core import Edge, FlowNode
 
 
 class ToolFactory:
@@ -13,45 +13,23 @@ class ToolFactory:
         )
 
     def build_data_collection_tool(self, edge: Edge):
-        collect_params = edge.collect_data
+        """Build a tool from JSON Schema"""
+        if not edge.input_schema:
+            raise ValueError(f"Edge {edge.id} has no input_schema defined")
 
-        param_type_map = {
-            FieldType.STRING: "string",
-            FieldType.INTEGER: "integer",
-            FieldType.FLOAT: "number",
-            FieldType.BOOLEAN: "boolean",
-        }
-
-        properties = {}
-        required_fields = []
-
-        for param in collect_params:
-            properties[param.name] = {
-                "type": param_type_map[param.type],
-                "description": param.description,
-            }
-            required_fields.append(param.name)
-
+        # Build the raw schema for the function tool
         raw_schema = {
             "type": "function",
             "name": edge.id,
             "description": edge.condition,
-            "parameters": {
-                "type": "object",
-                "properties": properties,
-                "required": required_fields,
-                "additionalProperties": False,
-            },
+            "parameters": edge.input_schema,
         }
 
         async def data_collection_func(
             raw_arguments: dict[str, object], context: RunContext
         ):
-            collected_data = {}
-            for param in collect_params:
-                value = raw_arguments[param.name]
-                collected_data[param.name] = value
-
+            # Collect all data from the arguments
+            collected_data = dict(raw_arguments)
             await self._on_collect_data(collected_data, edge.target_node_id, edge.id)
 
         return function_tool(data_collection_func, raw_schema=raw_schema)
@@ -70,7 +48,7 @@ class ToolFactory:
         tools = []
 
         for edge in node.edges:
-            if edge.collect_data:
+            if edge.input_schema:
                 tools.append(self.build_data_collection_tool(edge))
             else:
                 tools.append(self.build_transition_tool(edge.id, edge.target_node_id))

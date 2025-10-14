@@ -73,50 +73,41 @@ What would you like to do?
           id: 'details_ready',
           condition: 'All order details collected',
           target_node_id: 'submit_order',
-          collect_data: [
-            {
-              name: 'customer_name',
-              type: 'string' as const,
-              description: 'Customer full name for the order',
-              required: true,
+          input_schema: {
+            type: 'object',
+            properties: {
+              customer_name: {
+                type: 'string',
+                description: 'Customer full name for the order',
+              },
+              pizza_type: {
+                type: 'string',
+                description: 'Type of pizza (e.g., margherita, pepperoni, vegetarian)',
+              },
+              size: {
+                type: 'string',
+                description: 'Pizza size (small, medium, large)',
+              },
+              toppings: {
+                type: 'string',
+                description: 'Additional toppings (comma-separated list)',
+              },
+              address: {
+                type: 'string',
+                description: 'Delivery address',
+              },
+              phone: {
+                type: 'string',
+                description: 'Customer phone number for delivery confirmation',
+              },
+              special_instructions: {
+                type: 'string',
+                description: 'Any special delivery or preparation instructions',
+              },
             },
-            {
-              name: 'pizza_type',
-              type: 'string' as const,
-              description: 'Type of pizza (e.g., margherita, pepperoni, vegetarian)',
-              required: true,
-            },
-            {
-              name: 'size',
-              type: 'string' as const,
-              description: 'Pizza size (small, medium, large)',
-              required: false,
-            },
-            {
-              name: 'toppings',
-              type: 'string' as const,
-              description: 'Additional toppings (comma-separated list)',
-              required: false,
-            },
-            {
-              name: 'address',
-              type: 'string' as const,
-              description: 'Delivery address',
-              required: true,
-            },
-            {
-              name: 'phone',
-              type: 'string' as const,
-              description: 'Customer phone number for delivery confirmation',
-              required: false,
-            },
-            {
-              name: 'special_instructions',
-              type: 'string' as const,
-              description: 'Any special delivery or preparation instructions',
-              required: false,
-            },
-          ],
+            required: ['customer_name', 'pizza_type', 'address'],
+            additionalProperties: false,
+          },
         },
       ],
     },
@@ -172,14 +163,17 @@ Please try again or call us at (555) 123-PIZZA
           id: 'has_id',
           condition: 'Order number provided',
           target_node_id: 'get_status',
-          collect_data: [
-            {
-              name: 'order_id',
-              type: 'string' as const,
-              description: 'Order number to check status',
-              required: true,
+          input_schema: {
+            type: 'object',
+            properties: {
+              order_id: {
+                type: 'string',
+                description: 'Order number to check status',
+              },
             },
-          ],
+            required: ['order_id'],
+            additionalProperties: false,
+          },
         },
       ],
     },

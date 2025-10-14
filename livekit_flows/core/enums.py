@@ -1,13 +1,6 @@
 from enum import Enum
 
 
-class FieldType(str, Enum):
-    STRING = "string"
-    INTEGER = "integer"
-    FLOAT = "float"
-    BOOLEAN = "boolean"
-
-
 class HttpMethod(str, Enum):
     GET = "GET"
     POST = "POST"
