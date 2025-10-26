@@ -26,7 +26,7 @@ For development installation:
 ```bash
 git clone https://github.com/mateuszkulpa/livekit-flows.git
 cd livekit-flows
-pip install -e .
+uv sync
 ```
 
 ## Quick Start
