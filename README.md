@@ -15,13 +15,24 @@ LiveKit Flows allows you to define complex conversation flows using simple Pytho
 
 ## Installation
 
-Install from PyPI:
+Install from PyPI using your preferred package manager:
 
+### pip
 ```bash
 pip install livekit-flows
 ```
 
-For development installation:
+### uv
+```bash
+uv add livekit-flows
+```
+
+### Poetry
+```bash
+poetry add livekit-flows
+```
+
+### Development Installation
 
 ```bash
 git clone https://github.com/mateuszkulpa/livekit-flows.git
