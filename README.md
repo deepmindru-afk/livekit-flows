@@ -1,5 +1,7 @@
 # LiveKit Flows
 
+[![PyPI version](https://img.shields.io/pypi/v/livekit-flows)](https://pypi.org/project/livekit-flows/)
+
 A Python library for building declarative, flow-based conversational AI agents with [LiveKit](https://livekit.io/).
 
 LiveKit Flows allows you to define complex conversation flows using simple Python code or YAML files, making it easy to build structured voice agents that guide users through multi-step interactions.
