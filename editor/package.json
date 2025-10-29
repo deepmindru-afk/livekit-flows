@@ -21,6 +21,7 @@
     "@vue-flow/node-toolbar": "^1.1.1",
     "@vueuse/core": "^13.9.0",
     "eslint": "^9.36.0",
+    "modern-monaco": "^0.2.2",
     "nuxt": "^4.1.2",
     "tailwindcss": "^4.1.13",
     "valibot": "^1.1.0",

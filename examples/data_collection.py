@@ -7,14 +7,13 @@ from livekit.agents import (
 )
 from livekit.plugins import openai, cartesia, deepgram, silero
 from dotenv import load_dotenv
+from pydantic import BaseModel, Field
 
 from livekit_flows import (
     FlowAgent,
     ConversationFlow,
     FlowNode,
     Edge,
-    DataField,
-    FieldType,
 )
 
 import logging
@@ -22,6 +21,23 @@ import logging
 logger = logging.getLogger(__name__)
 
 load_dotenv()
+
+
+class CustomerName(BaseModel):
+    customer_name: str = Field(description="The customer's full name")
+
+
+class PartySize(BaseModel):
+    party_size: int = Field(description="Number of people for the reservation")
+
+
+class ReservationDate(BaseModel):
+    reservation_date: str = Field(description="Date and time for the reservation")
+
+
+class PhoneNumber(BaseModel):
+    phone_number: str = Field(description="Customer's phone number")
+
 
 reservation_flow = ConversationFlow(
     system_prompt="You are a conversational voice agent that takes restaurant reservations. Be friendly and collect customer information.",
@@ -36,14 +52,7 @@ reservation_flow = ConversationFlow(
                     condition="Customer provided their name",
                     id="collect_name",
                     target_node_id="get_party_size",
-                    collect_data=[
-                        DataField(
-                            name="customer_name",
-                            type=FieldType.STRING,
-                            description="The customer's full name",
-                            required=True,
-                        )
-                    ],
+                    input_schema=CustomerName,
                 )
             ],
         ),
@@ -56,14 +65,7 @@ reservation_flow = ConversationFlow(
                     condition="Customer provided party size",
                     id="collect_party_size",
                     target_node_id="get_date",
-                    collect_data=[
-                        DataField(
-                            name="party_size",
-                            type=FieldType.INTEGER,
-                            description="Number of people for the reservation",
-                            required=True,
-                        )
-                    ],
+                    input_schema=PartySize,
                 )
             ],
         ),
@@ -76,14 +78,7 @@ reservation_flow = ConversationFlow(
                     condition="Customer provided date and time",
                     id="collect_date",
                     target_node_id="get_phone",
-                    collect_data=[
-                        DataField(
-                            name="reservation_date",
-                            type=FieldType.STRING,
-                            description="Date and time for the reservation",
-                            required=True,
-                        )
-                    ],
+                    input_schema=ReservationDate,
                 )
             ],
         ),
@@ -96,14 +91,7 @@ reservation_flow = ConversationFlow(
                     condition="Customer provided phone number",
                     id="collect_phone",
                     target_node_id="confirm",
-                    collect_data=[
-                        DataField(
-                            name="phone_number",
-                            type=FieldType.STRING,
-                            description="Customer's phone number",
-                            required=True,
-                        )
-                    ],
+                    input_schema=PhoneNumber,
                 )
             ],
         ),

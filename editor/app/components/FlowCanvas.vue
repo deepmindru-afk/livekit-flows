@@ -60,7 +60,7 @@ function onConnect(params: Connection) {
       id,
       condition: '',
       target_node_id: params.target || undefined,
-      collect_data: [],
+      input_schema: undefined,
       actions: [],
     })
   })

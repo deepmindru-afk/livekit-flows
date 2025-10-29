@@ -5,7 +5,7 @@ import logging
 
 from ..core import ConversationFlow, FlowNode, ActionTriggerType
 from ..actions import ActionExecutor
-from ..utils import generate_userdata_class
+from ..utils import generate_userdata_class, validate_against_schema
 from .tools import ToolFactory
 from .session import end_session
 from ..templates import TemplateRenderer
@@ -36,6 +36,22 @@ class FlowAgent(Agent):
         async def handle_data_collection(
             collected_data: dict, target_node_id: str | None, edge_id: str | None
         ):
+            edge = None
+            for e in self._current_node.edges:
+                if e.id == edge_id:
+                    edge = e
+                    break
+
+            if edge and edge.input_schema:
+                is_valid, error_msg = validate_against_schema(
+                    collected_data, edge.input_schema
+                )
+                if not is_valid:
+                    logger.warning(
+                        f"Data collection validation failed for edge {edge_id}: {error_msg}"
+                    )
+                    # Continue despite validation error (non-blocking)
+
             if not hasattr(self.session, "userdata") or self.session.userdata is None:
                 self.session.userdata = self._userdata_class.model_construct()
 

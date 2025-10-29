@@ -4,8 +4,6 @@ from .core import (
     ConversationFlow,
     FlowNode,
     Edge,
-    DataField,
-    FieldType,
     HttpMethod,
     ActionTriggerType,
 )
@@ -24,8 +22,6 @@ __all__ = [
     "ConversationFlow",
     "FlowNode",
     "Edge",
-    "DataField",
-    "FieldType",
     "HttpMethod",
     "ActionTriggerType",
     "CustomAction",
