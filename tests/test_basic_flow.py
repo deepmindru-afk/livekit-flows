@@ -1,8 +1,8 @@
 import pytest
 from livekit.agents import AgentSession
 from livekit.plugins import openai
-from livekit_flows import FlowAgent, ConversationFlow, FlowNode, Edge
 
+from livekit_flows import ConversationFlow, Edge, FlowAgent, FlowNode
 
 reservation_flow = ConversationFlow(
     system_prompt="You are a conversational voice agent that takes restaurant reservations. Be friendly and get: name, party size, date, time.",
@@ -55,6 +55,7 @@ reservation_flow = ConversationFlow(
 )
 
 
+@pytest.mark.requires_credentials
 @pytest.mark.asyncio
 async def test_complete_reservation_flow(mock_job_context):
     """Test the complete reservation flow from start to finish."""
@@ -86,6 +87,7 @@ async def test_complete_reservation_flow(mock_job_context):
         )
 
 
+@pytest.mark.requires_credentials
 @pytest.mark.asyncio
 async def test_reservation_flow_with_corrections(mock_job_context):
     """Test the reservation flow when user wants to make corrections."""
